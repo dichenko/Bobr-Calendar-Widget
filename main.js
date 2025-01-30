@@ -18,7 +18,7 @@ function createWindow() {
     webPreferences: {
       contextIsolation: true,
       nodeIntegration: false,
-      preload: path.resolve(__dirname, 'preload.js')
+      preload: path.join(__dirname, 'preload.js')
     }
   });
 
@@ -28,7 +28,7 @@ function createWindow() {
 
   // Добавим отладочную информацию
   console.log('Текущая директория (__dirname):', __dirname);
-  console.log('Полный путь к preload.js:', path.resolve(__dirname, 'preload.js'));
+  console.log('Полный путь к preload.js:', path.join(__dirname, 'preload.js'));
 }
 
 // Регистрируем кастомный протокол
@@ -37,6 +37,7 @@ app.setAsDefaultProtocolClient('myapp');
 // Обработчик для авторизации Google
 ipcMain.handle('google-auth', async () => {
     try {
+        console.log('Получен запрос на авторизацию Google');
         // Создаем локальный сервер для получения callback
         const getAuthCode = new Promise((resolve, reject) => {
             authServer = require('http').createServer((req, res) => {
@@ -82,10 +83,7 @@ ipcMain.handle('google-auth', async () => {
 
         return tokens;
     } catch (error) {
-        console.error('Ошибка при авторизации:', error);
-        if (authServer) {
-            authServer.close();
-        }
+        console.error('Ошибка при обработке google-auth:', error);
         throw error;
     }
 });
@@ -211,6 +209,17 @@ ipcMain.handle('get-events', async (_, tokenData) => {
 // Добавляем обработчик для открытия внешних ссылок
 ipcMain.handle('open-external', async (_, url) => {
     await shell.openExternal(url);
+});
+
+// Добавляем обработчик для выхода из аккаунта
+ipcMain.handle('logout', () => {
+    try {
+        store.delete('googleToken');
+        return true;
+    } catch (error) {
+        console.error('Ошибка при выходе из аккаунта:', error);
+        return false;
+    }
 });
 
 app.whenReady().then(createWindow);

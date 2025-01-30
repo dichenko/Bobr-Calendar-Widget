@@ -2,7 +2,8 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Calendar Widget</title>
+  <title>Google Calendar Integration</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -33,13 +34,52 @@
     #auth-button:hover {
       background-color: #357abd;
     }
+
+    #logoutButton {
+      padding: 10px 20px;
+      font-size: 16px;
+      background-color: #4285f4;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      display: none;
+    }
+
+    #logoutButton:hover {
+      background-color: #357abd;
+    }
+
+    #logoutButton i {
+      margin-right: 8px;
+    }
+
+    #logoutButton {
+      padding: 10px 20px;
+      font-size: 16px;
+      background-color: #dc3545;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    #logoutButton:hover {
+      background-color: #c82333;
+    }
   </style>
 </head>
 <body>
-  <div id="container">
-    <div id="timer">00:00:00</div>
-    <button id="auth-button">Войти через Google</button>
-  </div>
+  <button id="auth-button">
+    <i class="fas fa-sign-in-alt"></i> Войти через Google
+  </button>
+  <button id="logoutButton" style="display: none;">
+    <i class="fas fa-sign-out-alt"></i> Выйти
+  </button>
+  <div id="timer"></div>
+  <div id="events"></div>
+
+  <!-- Подключаем только renderer.js -->
   <script src="renderer.js"></script>
 </body>
 </html>
