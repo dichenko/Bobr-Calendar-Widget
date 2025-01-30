@@ -102,7 +102,10 @@ authButton.addEventListener('click', async () => {
     try {
         const tokens = await window.electronAPI.googleAuth();
         console.log('Авторизация успешна');
-        await checkAuth(); // Проверяем и обновляем состояние после авторизации
+        // Сразу обновляем UI и загружаем события
+        authButton.style.display = 'none';
+        logoutButton.style.display = 'block';
+        await loadEvents(tokens); // Загружаем события сразу после получения токенов
     } catch (error) {
         console.error('Ошибка при авторизации:', error);
         authButton.style.display = 'block';
@@ -129,4 +132,19 @@ logoutButton.addEventListener('click', async () => {
 document.addEventListener('DOMContentLoaded', () => {
     console.log('DOM загружен, проверяем авторизацию');
     checkAuth();
+});
+
+// Добавляем слушатель события завершения авторизации
+window.electronAPI.onAuthComplete(async () => {
+    console.log('Получено событие завершения авторизации');
+    try {
+        const token = await window.electronAPI.getToken();
+        if (token && token.access_token) {
+            authButton.style.display = 'none';
+            logoutButton.style.display = 'block';
+            await loadEvents(token);
+        }
+    } catch (error) {
+        console.error('Ошибка при обработке завершения авторизации:', error);
+    }
 });

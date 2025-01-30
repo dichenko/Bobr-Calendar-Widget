@@ -10,9 +10,10 @@ const CLIENT_ID = process.env.CLIENT_ID;
 const CLIENT_SECRET = process.env.CLIENT_SECRET;
 
 let authServer = null;
+let mainWindow = null;
 
 function createWindow() {
-  const mainWindow = new BrowserWindow({
+  mainWindow = new BrowserWindow({
     width: 800,
     height: 600,
     webPreferences: {
@@ -20,6 +21,11 @@ function createWindow() {
       nodeIntegration: false,
       preload: path.join(__dirname, 'preload.js')
     }
+  });
+
+  // Устанавливаем кодировку для консоли
+  mainWindow.webContents.on('console-message', (event, level, message) => {
+    console.log(message);
   });
 
   mainWindow.loadFile('index.html');
@@ -38,7 +44,6 @@ app.setAsDefaultProtocolClient('myapp');
 ipcMain.handle('google-auth', async () => {
     try {
         console.log('Получен запрос на авторизацию Google');
-        // Создаем локальный сервер для получения callback
         const getAuthCode = new Promise((resolve, reject) => {
             authServer = require('http').createServer((req, res) => {
                 if (req.url.startsWith('/oauth2callback')) {
@@ -46,14 +51,37 @@ ipcMain.handle('google-auth', async () => {
                     const code = url.searchParams.get('code');
                     if (code) {
                         resolve(code);
-                        res.writeHead(200, { 'Content-Type': 'text/html' });
-                        res.end('<h1>Авторизация успешна! Можете закрыть это окно.</h1>');
+                        // Отправляем HTML-ответ
+                        res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+                        res.end(`
+                            <html>
+                                <head>
+                                    <title>Authorization Complete</title>
+                                    <script>
+                                        window.onload = function() {
+                                            window.close();
+                                        }
+                                    </script>
+                                    <style>
+                                        body { font-family: Arial, sans-serif; text-align: center; padding: 20px; }
+                                        h2 { color: #2c3e50; }
+                                    </style>
+                                </head>
+                                <body>
+                                    <h2>Authorization Successful!</h2>
+                                    <p>You can close this window and return to the app.</p>
+                                </body>
+                            </html>
+                        `);
+                        // Отправляем событие в главное окно
+                        mainWindow.webContents.send('auth-complete', true);
+                        authServer.close();
                     } else {
                         reject(new Error('Код авторизации не получен'));
                         res.writeHead(400, { 'Content-Type': 'text/html' });
-                        res.end('<h1>Ошибка авторизации</h1>');
+                        res.end('<h1>Authorization Failed</h1>');
+                        authServer.close();
                     }
-                    authServer.close();
                 }
             });
 
@@ -221,5 +249,42 @@ ipcMain.handle('logout', () => {
         return false;
     }
 });
+
+// В функции, где создается окно авторизации
+function createAuthWindow() {
+    const authWindow = new BrowserWindow({
+        width: 600,
+        height: 800,
+        webPreferences: {
+            nodeIntegration: false,
+            contextIsolation: true
+        }
+    });
+
+    // Добавляем обработчик для установки правильной кодировки
+    authWindow.webContents.on('did-finish-load', () => {
+        authWindow.webContents.executeJavaScript(`
+            document.open('text/html', 'replace');
+            document.write('<!DOCTYPE html>' +
+                '<html>' +
+                '<head>' +
+                    '<meta charset="UTF-8">' +
+                    '<title>Authorization</title>' +
+                    '<style>' +
+                        'body { font-family: Arial, sans-serif; text-align: center; padding: 20px; }' +
+                        'h2 { color: #2c3e50; }' +
+                    '</style>' +
+                '</head>' +
+                '<body>' +
+                    '<h2>Authorization Successful!</h2>' +
+                    '<p>You can close this window now.</p>' +
+                '</body>' +
+                '</html>');
+            document.close();
+        `);
+    });
+
+    return authWindow;
+}
 
 app.whenReady().then(createWindow);
