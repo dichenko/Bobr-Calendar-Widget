@@ -1,0 +1,28 @@
+body {
+  margin: 0;
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  font-family: Arial, sans-serif;
+  border-radius: 10px;
+  -webkit-app-region: drag;
+}
+
+#container {
+  padding: 20px;
+  text-align: center;
+}
+
+#timer {
+  font-size: 24px;
+  margin-bottom: 10px;
+}
+
+button {
+  -webkit-app-region: no-drag;
+  background: #4285f4;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+}
