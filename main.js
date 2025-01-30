@@ -198,39 +198,37 @@ ipcMain.handle('set-token', (_, tokenData) => {
     }
 });
 
-ipcMain.handle('get-events', async (_, tokenData) => {
+// Получение событий из календаря
+ipcMain.handle('get-events', async (event, token) => {
     try {
-        const oauth2Client = new google.auth.OAuth2(
-            CLIENT_ID,
-            CLIENT_SECRET
-        );
-        
-        // Устанавливаем токен
-        oauth2Client.setCredentials({
-            access_token: tokenData.access_token,
-            refresh_token: tokenData.refresh_token,
-            expiry_date: tokenData.expiry_date
-        });
+        const oauth2Client = new google.auth.OAuth2();
+        oauth2Client.setCredentials(token);
 
         const calendar = google.calendar({ version: 'v3', auth: oauth2Client });
+        
+        // Получаем начало и конец текущего дня
+        const now = new Date();
+        const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0).toISOString();
+        const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59).toISOString();
+
+        console.log('Запрашиваем события с:', startOfDay, 'по:', endOfDay);
+
         const response = await calendar.events.list({
             calendarId: 'primary',
-            timeMin: new Date().toISOString(),
-            maxResults: 1,
-            orderBy: 'startTime',
+            timeMin: startOfDay,
+            timeMax: endOfDay,
             singleEvents: true,
+            orderBy: 'startTime',
+            maxResults: 100  // Увеличиваем лимит событий
         });
 
-        // Возвращаем только необходимые поля событий
-        return response.data.items.map(event => ({
-            id: event.id,
-            summary: event.summary || 'Без названия',
-            start: event.start.dateTime || event.start.date,
-            end: event.end.dateTime || event.end.date
-        }));
+        console.log('Получено событий:', response.data.items.length);
+        
+        // Возвращаем все события
+        return response.data.items;
     } catch (error) {
         console.error('Ошибка при получении событий:', error);
-        throw new Error('Ошибка при получении событий');
+        throw error;
     }
 });
 

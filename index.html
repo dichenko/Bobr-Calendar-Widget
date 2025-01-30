@@ -6,14 +6,14 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
   <style>
     body {
-      font-family: Arial, sans-serif;
+      font-family: 'Roboto', Arial, sans-serif;
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: center;
-      height: 100vh;
+      min-height: 100vh;
       margin: 0;
-      background-color: #f0f0f0;
+      background-color: #f5f5f5;
+      padding: 20px;
     }
 
     #timer {
@@ -22,60 +22,169 @@
     }
 
     #auth-button {
-      padding: 10px 20px;
-      font-size: 16px;
-      background-color: #4285f4;
-      color: white;
-      border: none;
+      display: inline-flex;
+      align-items: center;
+      background-color: #fff;
+      color: #757575;
+      border: 1px solid #dadce0;
       border-radius: 4px;
+      padding: 0;
+      height: 40px;
       cursor: pointer;
+      font-family: 'Roboto', Arial, sans-serif;
+      font-size: 14px;
+      font-weight: 500;
+      box-shadow: 0 2px 4px 0 rgba(0,0,0,.25);
+      transition: background-color .218s, border-color .218s, box-shadow .218s;
     }
 
     #auth-button:hover {
-      background-color: #357abd;
+      box-shadow: 0 2px 8px 0 rgba(0,0,0,.25);
+      background-color: #f8f9fa;
+    }
+
+    #auth-button:active {
+      background-color: #f1f3f4;
+      box-shadow: 0 1px 2px 0 rgba(0,0,0,.25);
+    }
+
+    #auth-button .google-icon {
+      background: #fff;
+      padding: 8px 12px;
+      border-radius: 3px;
+    }
+
+    #auth-button .google-icon img {
+      width: 18px;
+      height: 18px;
+    }
+
+    #auth-button .button-text {
+      padding: 0 12px;
+      font-weight: 500;
     }
 
     #logoutButton {
-      padding: 10px 20px;
-      font-size: 16px;
-      background-color: #4285f4;
-      color: white;
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: none;
       border: none;
-      border-radius: 4px;
+      color: #5f6368;
       cursor: pointer;
+      padding: 10px;
+      font-size: 1.2em;
+      transition: color 0.2s;
+    }
+
+    #logoutButton:hover {
+      color: #1a73e8;
+    }
+
+    #timer, #events {
       display: none;
     }
 
-    #logoutButton:hover {
-      background-color: #357abd;
+    /* Новые стили для контейнеров событий */
+    .events-container {
+      width: 100%;
+      max-width: 600px;
+      margin: 10px 0;
+      display: none;
     }
 
-    #logoutButton i {
-      margin-right: 8px;
+    .past-events, .future-events {
+      background: white;
+      border-radius: 8px;
+      padding: 15px;
+      margin: 10px 0;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.12);
     }
 
-    #logoutButton {
-      padding: 10px 20px;
-      font-size: 16px;
-      background-color: #dc3545;
+    .current-event {
+      background: #1a73e8;
       color: white;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
+      border-radius: 8px;
+      padding: 20px;
+      margin: 15px 0;
+      text-align: center;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
     }
 
-    #logoutButton:hover {
-      background-color: #c82333;
+    .event-item {
+      padding: 10px;
+      border-bottom: 1px solid #eee;
+    }
+
+    .event-item:last-child {
+      border-bottom: none;
+    }
+
+    .event-title {
+      font-weight: 500;
+      color: #202124;
+      margin-bottom: 5px;
+    }
+
+    .event-time {
+      color: #5f6368;
+      font-size: 0.9em;
+    }
+
+    .current-event .event-title {
+      font-size: 1.2em;
+      margin-bottom: 10px;
+    }
+
+    .current-event .event-time {
+      color: rgba(255,255,255,0.9);
+      font-size: 1.5em;
+      font-weight: 500;
+    }
+
+    .section-title {
+      color: #5f6368;
+      font-size: 0.9em;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin: 10px 0;
     }
   </style>
 </head>
 <body>
   <button id="auth-button">
-    <i class="fas fa-sign-in-alt"></i> Войти через Google
+    <span class="google-icon">
+      <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTgiIGhlaWdodD0iMTgiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGcgZmlsbD0ibm9uZSIgZmlsbC1ydWxlPSJldmVub2RkIj48cGF0aCBkPSJNMTcuNiA5LjJsLS4xLTEuOEg5djMuNGg0LjhDMTMuNiAxMiAxMyAxMyAxMiAxMy42djIuMmgzYTguOCA4LjggMCAwIDAgMi42LTYuNnoiIGZpbGw9IiM0Mjg1RjQiIGZpbGwtcnVsZT0ibm9uemVybyIvPjxwYXRoIGQ9Ik05IDE4YzIuNCAwIDQuNS0uOCA2LTIuMmwtMy0yLjJhNS40IDUuNCAwIDAgMS04LTIuOUgxVjEzYTkgOSAwIDAgMCA4IDV6IiBmaWxsPSIjMzRBODUzIiBmaWxsLXJ1bGU9Im5vbnplcm8iLz48cGF0aCBkPSJNNCAxMC43YTUuNCA1LjQgMCAwIDEgMC0zLjRWNUgxYTkgOSAwIDAgMCAwIDhsMy0yLjN6IiBmaWxsPSIjRkJCQzA1IiBmaWxsLXJ1bGU9Im5vbnplcm8iLz48cGF0aCBkPSJNOSAzLjZjMS4zIDAgMi41LjQgMy40IDEuM0wxNSAyLjNBOSA5IDAgMCAwIDEgNWwzIDIuNGE1LjQgNS40IDAgMCAxIDUtMy43eiIgZmlsbD0iI0VBNDMzNSIgZmlsbC1ydWxlPSJub256ZXJvIi8+PHBhdGggZD0iTTAgMGgxOHYxOEgweiIvPjwvZz48L3N2Zz4=" alt="Google logo">
+    </span>
+    <span class="button-text">Sign in with Google</span>
   </button>
-  <button id="logoutButton" style="display: none;">
-    <i class="fas fa-sign-out-alt"></i> Выйти
+
+  <!-- Контейнер для всех событий -->
+  <div class="events-container">
+    <!-- Прошедшие события -->
+    <div class="past-events">
+      <div class="section-title">Past Events</div>
+      <div id="past-events-list"></div>
+    </div>
+
+    <!-- Текущее событие или следующее -->
+    <div class="current-event" id="current-event">
+      <div class="event-title"></div>
+      <div class="event-time"></div>
+    </div>
+
+    <!-- Будущие события -->
+    <div class="future-events">
+      <div class="section-title">Upcoming Events</div>
+      <div id="future-events-list"></div>
+    </div>
+  </div>
+
+  <!-- Кнопка выхода -->
+  <button id="logoutButton">
+    <i class="fas fa-sign-out-alt"></i>
   </button>
+
   <div id="timer"></div>
   <div id="events"></div>
 
