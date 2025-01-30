@@ -127,6 +127,7 @@
       position: absolute;
       top: 20px;
       width: 400px;
+      overflow: hidden;
     }
 
     .past-events, .future-events {
@@ -137,6 +138,39 @@
       box-shadow: 0 1px 3px rgba(0,0,0,0.12);
     }
 
+    .past-events-header {
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .past-events-header h3 {
+      margin: 0;
+      flex-grow: 1;
+    }
+
+    .past-events-toggle {
+      width: 20px;
+      height: 20px;
+      transition: transform 0.3s ease;
+    }
+
+    .past-events-toggle.open {
+      transform: rotate(180deg);
+    }
+
+    #past-events-list {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease-out;
+    }
+
+    #past-events-list.open {
+      max-height: fit-content;
+      margin-top: 10px;
+    }
+
     h3 {
       margin: 0 0 10px 0;
       color: #5f6368;
@@ -144,7 +178,7 @@
       font-weight: 500;
     }
 
-    .past-event-item, .event-item {
+    .event-item {
       font-size: 12px;
       color: #666;
       margin-bottom: 4px;
@@ -153,7 +187,7 @@
       align-items: center;
     }
 
-    .past-event-title, .event-title {
+    .event-title {
       color: #888;
       white-space: nowrap;
       overflow: hidden;
@@ -161,7 +195,7 @@
       max-width: 280px;
     }
 
-    .past-event-time, .event-time {
+    .event-time {
       color: #999;
       font-size: 11px;
       margin-left: 10px;
@@ -234,7 +268,7 @@
     }
 
     .current-event-title {
-        font-size: 24px;
+        font-size: 18px;
         font-weight: 500;
         color: white;
         margin-bottom: 20px;
@@ -244,6 +278,7 @@
         max-width: 340px;
         margin-left: auto;
         margin-right: auto;
+        opacity: 0.9;
     }
 
     .current-event-time-left {
@@ -265,9 +300,10 @@
     }
 
     .time-left-value {
-        font-size: 32px;
+        font-size: 48px;
         font-weight: bold;
         font-family: 'Roboto Mono', monospace;
+        letter-spacing: 2px;
     }
 
     /* Стили для кнопки Google Sign-In */
@@ -340,6 +376,31 @@
     .gsi-material-button:active {
       background-color: #f2f2f2;
     }
+
+    .past-event-item {
+        font-size: 11px;
+        color: #999;
+        margin-bottom: 4px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        opacity: 0.8;
+    }
+
+    .past-event-title {
+        color: #999;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 280px;
+    }
+
+    .past-event-time {
+        color: #bbb;
+        font-size: 10px;
+        margin-left: 10px;
+        flex-shrink: 0;
+    }
   </style>
 </head>
 <body>
@@ -366,7 +427,12 @@
 
     <div class="events-container" style="display: none;">
       <div class="past-events">
-        <h3>Past Events</h3>
+        <div class="past-events-header" id="past-events-header">
+          <h3>Past Events</h3>
+          <svg class="past-events-toggle" viewBox="0 0 24 24">
+            <path fill="#5f6368" d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/>
+          </svg>
+        </div>
         <div id="past-events-list"></div>
       </div>
 

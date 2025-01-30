@@ -297,3 +297,12 @@ document.addEventListener('DOMContentLoaded', () => {
     console.log('DOM загружен, проверяем авторизацию');
     checkAuth();
 });
+
+// Добавляем обработчик для раскрывающегося списка
+const pastEventsHeader = document.getElementById('past-events-header');
+const pastEventsToggle = pastEventsHeader.querySelector('.past-events-toggle');
+
+pastEventsHeader.addEventListener('click', () => {
+    pastEventsToggle.classList.toggle('open');
+    pastEventsList.classList.toggle('open');
+});
