@@ -1,17 +1,23 @@
 // Добавьте в начало файла для отладки
 console.log('Инициализация API:', window.electronAPI);
 
-// Получаем элементы
+// Получаем элементы DOM
 const authButton = document.getElementById('auth-button');
 const logoutButton = document.getElementById('logoutButton');
 const eventsContainer = document.querySelector('.events-container');
+const pastEventsList = document.getElementById('past-events-list');
 const currentEventElement = document.getElementById('current-event');
+const futureEventsList = document.getElementById('future-events-list');
 
-// Проверяем, что элементы найдены
-if (!authButton) console.error('Элемент auth-button не найден');
-if (!logoutButton) console.error('Элемент logoutButton не найден');
-if (!eventsContainer) console.error('Элемент events не найден');
-if (!currentEventElement) console.error('Элемент current-event не найден');
+// Проверяем, что все элементы найдены
+console.log('DOM Elements:', {
+    authButton,
+    logoutButton,
+    eventsContainer,
+    pastEventsList,
+    currentEventElement,
+    futureEventsList
+});
 
 // Функция форматирования времени
 function formatTime(dateString) {
@@ -38,6 +44,23 @@ function isToday(dateString) {
     return isToday;
 }
 
+// Функция для обрезки длинных названий
+function truncateTitle(title, maxLength = 40) {
+    if (title.length <= maxLength) return title;
+    return title.substring(0, maxLength) + '...';
+}
+
+// Функция форматирования времени до конца события
+function formatTimeLeft(endTime) {
+    const now = new Date();
+    const diff = endTime - now;
+    
+    const hours = Math.floor(diff / (1000 * 60 * 60));
+    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    
+    return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+}
+
 // Функция загрузки событий
 async function loadEvents(token) {
     try {
@@ -45,58 +68,100 @@ async function loadEvents(token) {
         console.log('Все полученные события:', events);
         
         if (!events || events.length === 0) {
-            console.log('Нет событий вообще');
             eventsContainer.style.display = 'block';
             currentEventElement.innerHTML = '<div class="event-title">Нет событий на сегодня</div>';
             return;
         }
 
-        // Фильтруем события только за сегодня
-        const todayEvents = events.filter(event => {
-            console.log('Проверяем событие:', event.summary);
-            console.log('Данные о начале:', event.start);
-            
-            // Получаем dateTime или date из объекта start
-            const startDateTime = event.start.dateTime || event.start.date;
-            const endDateTime = event.end.dateTime || event.end.date;
-            
-            console.log('Время начала события:', startDateTime);
-            return isToday(startDateTime);
-        });
+        const now = new Date();
+        const pastEvents = [];
+        const upcomingEvents = [];
+        let currentEvent = null;
 
-        console.log('События на сегодня после фильтрации:', todayEvents);
-
-        // Сортируем по времени начала
-        todayEvents.sort((a, b) => {
-            const timeA = new Date(a.start.dateTime || a.start.date);
-            const timeB = new Date(b.start.dateTime || b.start.date);
-            return timeA - timeB;
+        // Разделяем события на прошедшие, текущие и будущие
+        events.forEach(event => {
+            const startTime = new Date(event.start.dateTime || event.start.date);
+            const endTime = new Date(event.end.dateTime || event.end.date);
+            
+            if (endTime < now) {
+                pastEvents.push(event);
+            } else if (startTime <= now && endTime >= now) {
+                currentEvent = event;
+            } else if (startTime > now) {
+                upcomingEvents.push(event);
+            }
         });
 
         // Показываем контейнер событий
         eventsContainer.style.display = 'block';
 
-        // Отображаем все события за сегодня
-        if (todayEvents.length > 0) {
-            currentEventElement.innerHTML = todayEvents.map(event => {
-                const startTime = formatTime(new Date(event.start.dateTime || event.start.date));
-                const endTime = formatTime(new Date(event.end.dateTime || event.end.date));
-                return `
-                    <div class="event-item">
-                        <div class="event-title">${event.summary}</div>
-                        <div class="event-time">${startTime} - ${endTime}</div>
+        // Заполняем прошедшие события
+        pastEventsList.innerHTML = pastEvents.map(event => {
+            const startTime = formatTime(new Date(event.start.dateTime || event.start.date));
+            const endTime = formatTime(new Date(event.end.dateTime || event.end.date));
+            return `
+                <div class="past-event-item">
+                    <span class="past-event-title">${truncateTitle(event.summary)}</span>
+                    <span class="past-event-time">${startTime} - ${endTime}</span>
+                </div>
+            `;
+        }).join('');
+
+        // Отображаем текущее событие или время до следующего
+        if (currentEvent) {
+            const endTime = new Date(currentEvent.end.dateTime || currentEvent.end.date);
+            const timeLeft = formatTimeLeft(endTime);
+            currentEventElement.innerHTML = `
+                <div class="current-event-item">
+                    <div class="current-event-status">СЕЙЧАС</div>
+                    <div class="current-event-title">${truncateTitle(currentEvent.summary)}</div>
+                    <div class="current-event-time-left">
+                        <span class="time-left-label">осталось</span>
+                        <span class="time-left-value">${timeLeft}</span>
                     </div>
-                `;
-            }).join('');
+                </div>
+            `;
+        } else if (upcomingEvents.length > 0) {
+            const nextEvent = upcomingEvents[0];
+            const startTime = new Date(nextEvent.start.dateTime || nextEvent.start.date);
+            const timeUntil = formatTimeUntil(startTime);
+            currentEventElement.innerHTML = `
+                <div class="next-event-item">
+                    <div class="next-event-time">${timeUntil}</div>
+                    <div class="next-event-title">${truncateTitle(nextEvent.summary)}</div>
+                </div>
+            `;
         } else {
-            console.log('Нет событий на сегодня после фильтрации');
-            currentEventElement.innerHTML = '<div class="event-title">Нет событий на сегодня</div>';
+            currentEventElement.innerHTML = '<div class="no-events">Нет предстоящих событий</div>';
         }
+
+        // Заполняем будущие события
+        futureEventsList.innerHTML = upcomingEvents.map(event => {
+            const startTime = formatTime(new Date(event.start.dateTime || event.start.date));
+            const endTime = formatTime(new Date(event.end.dateTime || event.end.date));
+            return `
+                <div class="event-item">
+                    <span class="event-title">${truncateTitle(event.summary)}</span>
+                    <span class="event-time">${startTime} - ${endTime}</span>
+                </div>
+            `;
+        }).join('');
 
     } catch (error) {
         console.error('Ошибка при загрузке событий:', error);
         currentEventElement.innerHTML = '<div class="event-title">Ошибка при загрузке событий</div>';
     }
+}
+
+// Функция форматирования времени до события
+function formatTimeUntil(targetDate) {
+    const now = new Date();
+    const diff = targetDate - now;
+    
+    const hours = Math.floor(diff / (1000 * 60 * 60));
+    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    
+    return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
 }
 
 // Функция проверки авторизации
