@@ -238,14 +238,26 @@ authButton.addEventListener('click', async () => {
     }
 });
 
-// Обновляем обработчик выхода
+// Обработчик кнопки выхода
 logoutButton.addEventListener('click', async () => {
-    console.log('Нажата кнопка выхода');
     try {
         await window.electronAPI.logout();
-        clearUI(); // Используем функцию очистки UI
-        stopAutoUpdate();
-        console.log('Выход выполнен успешно');
+        // Очищаем все контейнеры с событиями
+        pastEventsList.innerHTML = '';
+        currentEventElement.innerHTML = '';
+        futureEventsList.innerHTML = '';
+        // Скрываем контейнер событий
+        eventsContainer.style.display = 'none';
+        // Показываем кнопку входа
+        authButton.style.display = 'block';
+        // Скрываем кнопку выхода
+        logoutButton.style.display = 'none';
+        // Останавливаем все интервалы обновления
+        if (updateInterval) {
+            clearInterval(updateInterval);
+            updateInterval = null;
+        }
+        console.log('Успешный выход');
     } catch (error) {
         console.error('Ошибка при выходе:', error);
     }
