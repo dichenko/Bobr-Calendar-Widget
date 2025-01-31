@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, shell } = require('electron');
+const { app, BrowserWindow, ipcMain, shell, Menu } = require('electron');
 const path = require('path');
 const { google } = require('googleapis');
 const Store = require('electron-store');
@@ -19,15 +19,46 @@ const playedNotifications = new Set();
 
 let eventCheckInterval = null;
 
+function createContextMenu() {
+    return Menu.buildFromTemplate([
+        {
+            label: 'Скрыть',
+            click: () => {
+                mainWindow.minimize();
+            }
+        },
+        {
+            type: 'separator'
+        },
+        {
+            label: 'Закрыть',
+            click: () => {
+                app.quit();
+            }
+        }
+    ]);
+}
+
 function createWindow() {
   mainWindow = new BrowserWindow({
-    width: 800,
-    height: 600,
+    width: 416,
+    height: 200,
+    frame: false,
+    transparent: true,
+    alwaysOnTop: true,
+    hasShadow: false,        // Убираем тень
+    //backgroundColor: '#00000000',  // Полностью прозрачный фон
     webPreferences: {
+      nodeIntegration: true,
       contextIsolation: true,
-      nodeIntegration: false,
       preload: path.join(__dirname, 'preload.js')
     }
+  });
+
+  // Добавляем обработчик контекстного меню
+  mainWindow.webContents.on('context-menu', (event) => {
+    const contextMenu = createContextMenu();
+    contextMenu.popup();
   });
 
   // Устанавливаем кодировку для консоли
@@ -37,7 +68,7 @@ function createWindow() {
 
   mainWindow.loadFile('index.html');
   require('@electron/remote/main').enable(mainWindow.webContents);
-  mainWindow.webContents.openDevTools();
+  //mainWindow.webContents.openDevTools();
 
   // Добавим отладочную информацию
   console.log('Текущая директория (__dirname):', __dirname);
