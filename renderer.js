@@ -64,6 +64,12 @@ function formatTimeLeft(endTime) {
 // Функция загрузки событий
 async function loadEvents(token) {
     try {
+        // Проверяем валидность токена
+        if (!token || !token.access_token) {
+            console.error('Невалидный токен:', token);
+            throw new Error('Токен отсутствует или недействителен');
+        }
+
         const events = await window.electronAPI.getEvents(token);
         console.log('Все полученные события:', events);
         
@@ -149,7 +155,13 @@ async function loadEvents(token) {
 
     } catch (error) {
         console.error('Ошибка при загрузке событий:', error);
-        currentEventElement.innerHTML = '<div class="event-title">Ошибка при загрузке событий</div>';
+        // Если ошибка связана с токеном, попробуем переавторизоваться
+        if (error.message.includes('invalid_request')) {
+            clearUI();
+            await checkAuth(); // Попытка переавторизации
+        } else {
+            currentEventElement.innerHTML = '<div class="event-title">Ошибка при загрузке событий</div>';
+        }
     }
 }
 
@@ -306,3 +318,24 @@ pastEventsHeader.addEventListener('click', () => {
     pastEventsToggle.classList.toggle('open');
     pastEventsList.classList.toggle('open');
 });
+
+// Создаем аудио элемент один раз при загрузке
+const notificationSound = new Audio('notification.mp3');
+
+// Слушаем события уведомлений
+window.electron.onPlayNotification(() => {
+    notificationSound.play().catch(err => {
+        console.error('Ошибка воспроизведения звука:', err);
+    });
+});
+
+// Добавляем слушатель обновления событий
+window.electron.onEventsUpdated((events) => {
+    updateEventsDisplay(events);
+});
+
+// Функция для обновления отображения событий
+function updateEventsDisplay(events) {
+    // Ваш код для обновления UI с новыми событиями
+    // Можно использовать существующую логику отображения событий
+}

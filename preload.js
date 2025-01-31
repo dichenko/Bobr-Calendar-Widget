@@ -18,4 +18,14 @@ contextBridge.exposeInMainWorld(
     }
 );
 
+contextBridge.exposeInMainWorld('electron', {
+    // Добавьте новый обработчик для звуковых уведомлений
+    onPlayNotification: (callback) => {
+        ipcRenderer.on('play-notification', callback);
+    },
+    onEventsUpdated: (callback) => {
+        ipcRenderer.on('events-updated', (_, events) => callback(events));
+    }
+});
+
 console.log('Preload script загружен');
