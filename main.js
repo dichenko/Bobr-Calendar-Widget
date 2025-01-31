@@ -83,20 +83,16 @@ function startEventChecking(token) {
             
             response.data.items.forEach(event => {
                 const endTime = new Date(event.end.dateTime || event.end.date);
-                const tenMinutesBeforeEnd = new Date(endTime.getTime() - 10 * 60 * 1000);
+                const now = new Date();
+                const timeLeft = endTime.getTime() - now.getTime();
+                const minutesLeft = Math.floor(timeLeft / (1000 * 60));
                 const notificationId = `${event.id}_${endTime.getTime()}`;
 
-                if (now >= tenMinutesBeforeEnd && 
-                    now < endTime && 
-                    !playedNotifications.has(notificationId)) {
-                    
-                    console.log(`Отправка уведомления для события: ${event.summary}`);
+                // Проверяем, что осталось ровно 10 минут (с погрешностью в 30 секунд из-за интервала обновления)
+                if (minutesLeft <= 10 && minutesLeft > 9 && !playedNotifications.has(notificationId)) {
+                    console.log(`Отправка уведомления для события: ${event.summary}, осталось минут: ${minutesLeft}`);
                     mainWindow.webContents.send('play-notification');
                     playedNotifications.add(notificationId);
-
-                    setTimeout(() => {
-                        playedNotifications.delete(notificationId);
-                    }, endTime.getTime() - now.getTime());
                 }
             });
 
@@ -313,24 +309,16 @@ ipcMain.handle('get-events', async (event, token) => {
         // Проверяем каждое событие
         response.data.items.forEach(event => {
             const endTime = new Date(event.end.dateTime || event.end.date);
-            const tenMinutesBeforeEnd = new Date(endTime.getTime() - 10 * 60 * 1000);
-            const notificationId = `${event.id}_${endTime.getTime()}`; // Уникальный ID для уведомления
+            const now = new Date();
+            const timeLeft = endTime.getTime() - now.getTime();
+            const minutesLeft = Math.floor(timeLeft / (1000 * 60));
+            const notificationId = `${event.id}_${endTime.getTime()}`;
 
-            // Проверяем, что:
-            // 1. Текущее время находится в интервале 10 минут до конца события
-            // 2. Уведомление для этого события еще не было проиграно
-            if (now >= tenMinutesBeforeEnd && 
-                now < endTime && 
-                !playedNotifications.has(notificationId)) {
-                
-                console.log(`Отправка уведомления для события: ${event.summary}`);
+            // Проверяем, что осталось ровно 10 минут (с погрешностью в 30 секунд из-за интервала обновления)
+            if (minutesLeft <= 10 && minutesLeft > 9 && !playedNotifications.has(notificationId)) {
+                console.log(`Отправка уведомления для события: ${event.summary}, осталось минут: ${minutesLeft}`);
                 mainWindow.webContents.send('play-notification');
                 playedNotifications.add(notificationId);
-
-                // Очищаем ID уведомления после окончания события
-                setTimeout(() => {
-                    playedNotifications.delete(notificationId);
-                }, endTime.getTime() - now.getTime());
             }
         });
 
@@ -346,14 +334,20 @@ ipcMain.handle('open-external', async (_, url) => {
     await shell.openExternal(url);
 });
 
-// Добавляем обработчик для выхода из аккаунта
+// Обработчик для выхода
 ipcMain.handle('logout', () => {
     try {
+        // Останавливаем интервал проверки событий
         if (eventCheckInterval) {
             clearInterval(eventCheckInterval);
             eventCheckInterval = null;
         }
+        // Очищаем сохраненный токен
         store.delete('googleToken');
+        // Очищаем Set с уведомлениями
+        playedNotifications.clear();
+        // Отправляем сигнал в renderer для очистки UI
+        mainWindow.webContents.send('clear-events');
         return true;
     } catch (error) {
         console.error('Ошибка при выходе из аккаунта:', error);

@@ -25,6 +25,9 @@ contextBridge.exposeInMainWorld('electron', {
     },
     onEventsUpdated: (callback) => {
         ipcRenderer.on('events-updated', (_, events) => callback(events));
+    },
+    onClearEvents: (callback) => {
+        ipcRenderer.on('clear-events', callback);
     }
 });
 

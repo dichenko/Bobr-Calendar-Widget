@@ -230,7 +230,9 @@ function clearUI() {
     logoutButton.style.display = 'none';
     eventsContainer.style.display = 'none';
     // Очищаем содержимое
+    pastEventsList.innerHTML = '';
     currentEventElement.innerHTML = '';
+    futureEventsList.innerHTML = '';
     console.log('UI очищен');
 }
 
@@ -254,21 +256,7 @@ authButton.addEventListener('click', async () => {
 logoutButton.addEventListener('click', async () => {
     try {
         await window.electronAPI.logout();
-        // Очищаем все контейнеры с событиями
-        pastEventsList.innerHTML = '';
-        currentEventElement.innerHTML = '';
-        futureEventsList.innerHTML = '';
-        // Скрываем контейнер событий
-        eventsContainer.style.display = 'none';
-        // Показываем кнопку входа
-        authButton.style.display = 'block';
-        // Скрываем кнопку выхода
-        logoutButton.style.display = 'none';
-        // Останавливаем все интервалы обновления
-        if (updateInterval) {
-            clearInterval(updateInterval);
-            updateInterval = null;
-        }
+        clearUI();
         console.log('Успешный выход');
     } catch (error) {
         console.error('Ошибка при выходе:', error);
@@ -385,3 +373,8 @@ function updateEventsDisplay(events) {
         }
     }
 }
+
+// Добавляем слушатель очистки событий
+window.electron.onClearEvents(() => {
+    clearUI();
+});
