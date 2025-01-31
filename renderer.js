@@ -331,11 +331,57 @@ window.electron.onPlayNotification(() => {
 
 // Добавляем слушатель обновления событий
 window.electron.onEventsUpdated((events) => {
+    console.log('Получено обновление событий');
     updateEventsDisplay(events);
 });
 
 // Функция для обновления отображения событий
 function updateEventsDisplay(events) {
-    // Ваш код для обновления UI с новыми событиями
-    // Можно использовать существующую логику отображения событий
+    if (!events || events.length === 0) {
+        eventsContainer.style.display = 'block';
+        currentEventElement.innerHTML = '<div class="event-title">Нет событий на сегодня</div>';
+        return;
+    }
+
+    const now = new Date();
+    const currentEvent = events.find(event => {
+        const startTime = new Date(event.start.dateTime || event.start.date);
+        const endTime = new Date(event.end.dateTime || event.end.date);
+        return now >= startTime && now <= endTime;
+    });
+
+    if (currentEvent) {
+        const endTime = new Date(currentEvent.end.dateTime || currentEvent.end.date);
+        const timeLeft = formatTimeLeft(endTime);
+
+        eventsContainer.style.display = 'block';
+        currentEventElement.innerHTML = `
+            <div class="current-event-item">
+                <div class="current-event-status">СЕЙЧАС</div>
+                <div class="current-event-title">${truncateTitle(currentEvent.summary)}</div>
+                <div class="current-event-time-left">
+                    <span class="time-left-label">осталось</span>
+                    <span class="time-left-value">${timeLeft}</span>
+                </div>
+            </div>
+        `;
+    } else {
+        const nextEvent = events.find(event => {
+            const startTime = new Date(event.start.dateTime || event.start.date);
+            return startTime > now;
+        });
+
+        if (nextEvent) {
+            const startTime = new Date(nextEvent.start.dateTime || nextEvent.start.date);
+            const timeUntil = formatTimeUntil(startTime);
+            currentEventElement.innerHTML = `
+                <div class="next-event-item">
+                    <div class="next-event-time">${timeUntil}</div>
+                    <div class="next-event-title">${truncateTitle(nextEvent.summary)}</div>
+                </div>
+            `;
+        } else {
+            currentEventElement.innerHTML = '<div class="no-events">Нет предстоящих событий</div>';
+        }
+    }
 }
