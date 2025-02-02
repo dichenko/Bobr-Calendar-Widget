@@ -8,7 +8,11 @@ document.addEventListener('DOMContentLoaded', () => {
     // Функция для форматирования времени
     function formatTime(dateString) {
         const date = new Date(dateString);
-        return date.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+        return date.toLocaleTimeString('ru-RU', { 
+            hour: '2-digit', 
+            minute: '2-digit',
+            hour12: false 
+        });
     }
 
     // Функция для обрезки длинных названий
@@ -142,12 +146,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Обработчик для обновления событий
-   // Обработчик для обновления событий
-window.electronAPI.onEventsUpdated((event, events) => {
-    console.log('События обновлены:', events);
-    updateEventsDisplay(events); // Передаем только массив событий
-});
+    // Инициализация слушателя событий
+    window.electronAPI.onEventsUpdated((events) => {
+        updateEventsDisplay(events);
+        console.log('События обновлены в фоне:', new Date().toLocaleTimeString());
+    });
 
     // Обработчик фокуса окна
     window.addEventListener('focus', async () => {
@@ -160,6 +163,27 @@ window.electronAPI.onEventsUpdated((event, events) => {
         } catch (error) {
             console.error('Ошибка при обновлении событий:', error);
         }
+    });
+
+    // Добавляем обработчик для разлогинивания
+    window.electronAPI.onClearEvents(() => {
+        // Скрываем контейнеры событий
+        document.querySelector('.events-container').style.display = 'none';
+        // Показываем кнопку авторизации
+        document.getElementById('auth-button').style.display = 'block';
+    });
+
+    // Инициализация интерфейса
+    function initializeUI() {
+        // Скрываем кнопку авторизации после успешного входа
+        document.getElementById('auth-button').style.display = 'none';
+        // Показываем контейнеры событий
+        document.querySelector('.events-container').style.display = 'block';
+    }
+
+    // Пример вызова инициализации после авторизации
+    window.electronAPI.onAuthComplete(() => {
+        initializeUI();
     });
 
     // Проверяем авторизацию при загрузке страницы

@@ -2,26 +2,26 @@ const { ipcMain } = require('electron');
 const calendar = require('./calendar');
 
 let eventCheckInterval = null;
+let currentToken = null;
 
 function startEventChecking(token) {
-    if (eventCheckInterval) {
-        clearInterval(eventCheckInterval);
+    currentToken = token;
+    if (eventCheckInterval) clearInterval(eventCheckInterval);
+    
+    // Запускаем немедленное обновление
+    updateEvents();
+    
+    // Устанавливаем постоянный интервал
+    eventCheckInterval = setInterval(updateEvents, 30000);
+}
+
+async function updateEvents() {
+    try {
+        const events = await calendar.getEvents(currentToken);
+        ipcMain.emit('events-updated', events);
+    } catch (error) {
+        console.error('Ошибка обновления событий:', error);
     }
-
-    // Проверяем события каждые 30 секунд
-    eventCheckInterval = setInterval(async () => {
-        try {
-            const events = await calendar.getEvents(token);
-            ipcMain.emit('events-updated', events); // Отправляем события в renderer
-        } catch (error) {
-            console.error('Ошибка при проверке событий:', error);
-        }
-    }, 30000); // 30 секунд
-
-    // Первая проверка сразу
-    calendar.getEvents(token)
-        .then(events => ipcMain.emit('events-updated', events))
-        .catch(error => console.error('Ошибка при первой проверке событий:', error));
 }
 
 function stopEventChecking() {
@@ -30,6 +30,15 @@ function stopEventChecking() {
         eventCheckInterval = null;
     }
 }
+
+// Добавляем обработчик для работы в фоновом режиме
+ipcMain.on('app-blur', () => {
+    console.log('Приложение ушло в фон, продолжаем проверку событий');
+});
+
+ipcMain.on('app-focus', () => {
+    console.log('Приложение вернулось в фокус');
+});
 
 module.exports = {
     startEventChecking,

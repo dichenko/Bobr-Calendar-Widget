@@ -3,6 +3,11 @@ const path = require('path');
 const auth = require('./auth');
 const eventManager = require('./eventManager');
 const calendar = require('./calendar');
+const Store = require('electron-store');
+const { google } = require('googleapis');
+
+// Создаем экземпляр Store
+const store = new Store();
 
 let mainWindow = null;
 
@@ -13,6 +18,7 @@ function createWindow() {
     frame: false,
     transparent: true,
     alwaysOnTop: true,
+    hasShadow: false,
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: true,
@@ -24,23 +30,41 @@ function createWindow() {
   // Открываем DevTools в отдельном окне
   mainWindow.webContents.openDevTools({ mode: 'detach' });
 
+  // Обработчики фокуса окна
+  mainWindow.on('blur', () => {
+    console.log('Окно потеряло фокус');
+  });
+
+  mainWindow.on('focus', () => {
+    console.log('Окно получило фокус');
+    // При фокусе сразу обновляем события
+    const token = store.get('googleToken');
+    if (token) eventManager.startEventChecking(token);
+  });
+
+  // Изменение: обработка события обновления событий
+  ipcMain.on('events-updated', (events) => {
+    mainWindow.webContents.send('events-updated', events);
+  });
 }
+
+// Единственный обработчик для logout
+ipcMain.handle('logout', async () => {
+  console.log('Обработчик logout вызван');
+  auth.logout();
+  eventManager.stopEventChecking();
+  store.delete('googleToken');
+  if (mainWindow) {
+    mainWindow.webContents.send('clear-events');
+  }
+  return true;
+});
 
 // Обработчик для авторизации
 ipcMain.handle('google-auth', async () => {
   const tokens = await auth.authenticate();
-  eventManager.startEventChecking(tokens); // Запускаем проверку событий
-  const events = await calendar.getEvents(tokens); // Загружаем события
-  mainWindow.webContents.send('events-updated', events || []); // Убедимся, что events всегда массив
+  eventManager.startEventChecking(tokens);
   return tokens;
-});
-
-// Обработчик для выхода
-ipcMain.handle('logout', () => {
-  auth.logout();
-  eventManager.stopEventChecking();
-  mainWindow.webContents.send('clear-events'); // Очищаем события в интерфейсе
-  return true;
 });
 
 // Обработчик для получения токена
