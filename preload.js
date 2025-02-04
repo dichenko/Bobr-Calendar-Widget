@@ -1,4 +1,6 @@
 const { contextBridge, ipcRenderer } = require('electron');
+const notifier = require('node-notifier');
+const path = require('path');
 
 contextBridge.exposeInMainWorld('electronAPI', {
     googleAuth: () => ipcRenderer.invoke('google-auth'),
@@ -9,5 +11,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
     onEventsUpdated: (callback) => {
         ipcRenderer.on('events-updated', (_, events) => callback(events));
     },
-    onClearEvents: (callback) => ipcRenderer.on('clear-events', callback)
+    onClearEvents: (callback) => ipcRenderer.on('clear-events', callback),
+    playNotification: () => ipcRenderer.invoke('show-notification'),
 });

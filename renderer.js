@@ -5,6 +5,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const currentEventContainer = document.getElementById('current-event-container');
     const nextEventContainer = document.getElementById('next-event-container');
 
+    let soundPlayed = false;
+
     // Функция для форматирования времени
     function formatTime(dateString) {
         const date = new Date(dateString);
@@ -16,9 +18,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Функция для обрезки длинных названий
-    function truncateTitle(title, maxLength = 40) {
-        if (title.length <= maxLength) return title;
-        return title.substring(0, maxLength) + '...';
+    function truncateTitle(title) {
+        // Добавляем проверку на undefined/null
+        if (!title) return 'Без названия';
+        return title.length > 30 ? title.substring(0, 27) + '...' : title;
     }
 
     // Функция для обновления интерфейса с событиями
@@ -57,13 +60,28 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (currentEvent) {
             const endTime = new Date(currentEvent.end.dateTime || currentEvent.end.date);
-            const timeLeft = Math.floor((endTime - now) / (1000 * 60)); // Осталось минут
+            const timeLeft = Math.floor((endTime - now) / (1000 * 60));
+            
+            // Добавим отладочную информацию
+            console.log('Текущее время:', now);
+            console.log('Время окончания:', endTime);
+            console.log('Осталось минут:', timeLeft);
+            
+            if (timeLeft <= 10 && timeLeft > 9 && !soundPlayed) {
+                window.electronAPI.playNotification();
+                soundPlayed = true;
+            }
+            
+            // Сбрасываем флаг, когда событие закончилось
+            if (timeLeft <= 0) {
+                soundPlayed = false;
+            }
 
             currentEventContainer.innerHTML = `
                 <div class="current-event-item">
                     <div class="current-event-status">СЕЙЧАС</div>
                     <div class="current-event-title">${truncateTitle(currentEvent.summary)}</div>
-                    <div class="current-event-time-left">Осталось: ${timeLeft} мин.</div>
+                    <div class="current-event-time-left">Осталось: ${timeLeft} </div>
                 </div>`;
 
             if (nextEvent) {
@@ -138,9 +156,15 @@ document.addEventListener('DOMContentLoaded', () => {
     logoutButton.addEventListener('click', async () => {
         try {
             await window.electronAPI.logout();
+            // Очищаем контейнеры событий
+            currentEventContainer.innerHTML = '';
+            nextEventContainer.innerHTML = '';
+            // Скрываем контейнер событий
+            eventsContainer.style.display = 'none';
+            // Показываем кнопку авторизации
             authButton.style.display = 'block';
+            // Скрываем кнопку выхода
             logoutButton.style.display = 'none';
-            eventsContainer.style.display = 'none'; // Скрываем контейнер событий
         } catch (error) {
             console.error('Ошибка при выходе:', error);
         }
@@ -165,12 +189,17 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Добавляем обработчик для разлогинивания
+    // Обработчик для разлогинивания
     window.electronAPI.onClearEvents(() => {
-        // Скрываем контейнеры событий
+        // Очищаем контейнеры событий
+        document.getElementById('current-event-container').innerHTML = '';
+        document.getElementById('next-event-container').innerHTML = '';
+        // Скрываем контейнер событий
         document.querySelector('.events-container').style.display = 'none';
         // Показываем кнопку авторизации
         document.getElementById('auth-button').style.display = 'block';
+        // Скрываем кнопку выхода
+        document.getElementById('logoutButton').style.display = 'none';
     });
 
     // Инициализация интерфейса

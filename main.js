@@ -1,10 +1,13 @@
-const { app, BrowserWindow, ipcMain } = require('electron');
+const { app, BrowserWindow, ipcMain, protocol, net } = require('electron');
 const path = require('path');
 const auth = require('./auth');
 const eventManager = require('./eventManager');
 const calendar = require('./calendar');
 const Store = require('electron-store');
-const { google } = require('googleapis');
+//const { google } = require('googleapis');
+const notifier = require('node-notifier');
+const { exec } = require('child_process');
+const soundPath = path.join(__dirname, 'assets/sounds', 'notification1.wav');
 
 // Создаем экземпляр Store
 const store = new Store();
@@ -55,7 +58,10 @@ ipcMain.handle('logout', async () => {
   eventManager.stopEventChecking();
   store.delete('googleToken');
   if (mainWindow) {
+    // Отправляем событие для очистки UI
     mainWindow.webContents.send('clear-events');
+    // Сбрасываем текущие события
+    ipcMain.emit('events-updated', null, []);
   }
   return true;
 });
@@ -83,7 +89,43 @@ ipcMain.handle('get-events', async (event, token) => {
   }
 });
 
+// Добавим новый обработчик IPC
+ipcMain.handle('show-notification', () => {
+    console.log('Показываем уведомление'); // для отладки
+
+     // Формируем путь к звуковому файлу
+     //const soundPath = path.join(__dirname, 'assets/sounds', 'notification1.waw');
+    
+     // Используем PowerShell для воспроизведения звука в Windows
+     const command = `powershell -c (New-Object Media.SoundPlayer '${soundPath}').PlaySync()`;
+     
+     exec(command, (error) => {
+         if (error) {
+             console.error('Ошибка воспроизведения звука:', error);
+         } else {
+             console.log('Звук успешно воспроизведен');
+         }
+     });
+
+    notifier.notify({
+        title: 'Календарь',
+        message: 'До конца события осталось 10 минут',
+        sound: true,
+        wait: false
+    }, (err, response) => {
+        // Добавим логирование для отладки
+        if (err) console.error('Ошибка уведомления:', err);
+        console.log('Ответ уведомления:', response);
+    });
+});
+
 app.whenReady().then(() => {
+  // Добавляем протокол для доступа к локальным ресурсам
+  protocol.handle('asset', (request) => {
+    const url = request.url.replace('asset://', '');
+    return net.fetch('file://' + path.join(__dirname, url));
+  });
+  
   createWindow();
   const token = auth.getToken();
   if (token) {

@@ -16,6 +16,8 @@
     "electron": "^34.0.1",
     "electron-store": "^8.0.1",
     "googleapis": "^105.0.0",
+    "node-notifier": "^10.0.1",
+    "node-wav-player": "^1.0.0",
     "play-sound": "^1.1.6"
   }
 }
