@@ -11,13 +11,15 @@ body {
 
 /* Контейнеры */
 .container {
-  width: 400px;
+  width: 300px;
   margin: 0 auto;
   display: flex;
   flex-direction: column;
   align-items: center;
   position: relative;
+  padding: 5px;
 }
+
 
 .events-container {
   width: 100%;
@@ -36,10 +38,10 @@ body {
 /* Область для перетаскивания окна */
 .drag-region {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 100%;
+  top: 5px;
+  left: 5px;
+  right: 5px;
+  bottom: 5px;
   -webkit-app-region: drag;
 }
 
@@ -156,9 +158,11 @@ button {
 }
 
 .current-event-time-left {
-  font-size: 24px;
+  font-size: 32px;
   font-weight: bold;
   color: rgba(255, 255, 255, 0.9);
+  text-align: center;
+  width: 100%;
 }
 
 .next-event-compact {

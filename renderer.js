@@ -81,7 +81,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div class="current-event-item">
                     <div class="current-event-status">СЕЙЧАС</div>
                     <div class="current-event-title">${truncateTitle(currentEvent.summary)}</div>
-                    <div class="current-event-time-left">Осталось: ${timeLeft} </div>
+                    <div class="current-event-time-left">${String(Math.floor(timeLeft/60)).padStart(2,'0')}:${String(Math.floor(timeLeft%60)).padStart(2,'0')}</div>
                 </div>`;
 
             if (nextEvent) {
@@ -100,7 +100,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div class="current-event-item">
                     <div class="current-event-status">ДО НАЧАЛА</div>
                     <div class="current-event-title">${truncateTitle(nextEvent.summary)}</div>
-                    <div class="current-event-time-left">Через: ${timeUntil} мин.</div>
+                    <div class="current-event-time-left"> ${String(Math.floor(timeUntil/60)).padStart(2,'0')}:${String(Math.floor(timeUntil%60)).padStart(2,'0')}</div>
                 </div>`;
             nextEventContainer.innerHTML = '';
         } else {
