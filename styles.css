@@ -110,28 +110,7 @@ button {
   vertical-align: top;
 }
 
-/* Кнопка выхода */
-#logoutButton {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 5px;
-  display: none;
-}
 
-#logoutButton svg {
-  width: 24px;
-  height: 24px;
-  fill: #666;
-  transition: fill 0.3s;
-}
-
-#logoutButton:hover svg {
-  fill: #1a73e8;
-}
 
 /* Блоки событий */
 .current-event-item, .next-event-compact {

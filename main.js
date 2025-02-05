@@ -33,13 +33,10 @@ function createWindow() {
   // Открываем DevTools в отдельном окне
   mainWindow.webContents.openDevTools({ mode: 'detach' });
 
-  // Обработчики фокуса окна
-  mainWindow.on('blur', () => {
-    console.log('Окно потеряло фокус');
-  });
+
 
   mainWindow.on('focus', () => {
-    console.log('Окно получило фокус');
+    
     // При фокусе сразу обновляем события
     const token = store.get('googleToken');
     if (token) eventManager.startEventChecking(token);
@@ -51,20 +48,7 @@ function createWindow() {
   });
 }
 
-// Единственный обработчик для logout
-ipcMain.handle('logout', async () => {
-  console.log('Обработчик logout вызван');
-  auth.logout();
-  eventManager.stopEventChecking();
-  store.delete('googleToken');
-  if (mainWindow) {
-    // Отправляем событие для очистки UI
-    mainWindow.webContents.send('clear-events');
-    // Сбрасываем текущие события
-    ipcMain.emit('events-updated', null, []);
-  }
-  return true;
-});
+
 
 // Обработчик для авторизации
 ipcMain.handle('google-auth', async () => {

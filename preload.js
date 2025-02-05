@@ -5,7 +5,7 @@ const path = require('path');
 contextBridge.exposeInMainWorld('electronAPI', {
     googleAuth: () => ipcRenderer.invoke('google-auth'),
     getToken: () => ipcRenderer.invoke('get-token'),
-    logout: () => ipcRenderer.invoke('logout'),
+    
     getEvents: (token) => ipcRenderer.invoke('get-events', token),
     onAuthComplete: (callback) => ipcRenderer.on('auth-complete', callback),
     onEventsUpdated: (callback) => {

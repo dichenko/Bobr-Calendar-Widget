@@ -1,6 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
     const authButton = document.getElementById('auth-button');
-    const logoutButton = document.getElementById('logoutButton');
+    
     const eventsContainer = document.querySelector('.events-container');
     const currentEventContainer = document.getElementById('current-event-container');
     const nextEventContainer = document.getElementById('next-event-container');
@@ -129,11 +129,11 @@ document.addEventListener('DOMContentLoaded', () => {
             const token = await window.electronAPI.getToken();
             if (token) {
                 authButton.style.display = 'none';
-                logoutButton.style.display = 'block';
+                
                 await loadEvents(token); // Загружаем события после успешной авторизации
             } else {
                 authButton.style.display = 'block';
-                logoutButton.style.display = 'none';
+                
             }
         } catch (error) {
             console.error('Ошибка при проверке авторизации:', error);
@@ -152,23 +152,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Обработчик для кнопки выхода
-    logoutButton.addEventListener('click', async () => {
-        try {
-            await window.electronAPI.logout();
-            // Очищаем контейнеры событий
-            currentEventContainer.innerHTML = '';
-            nextEventContainer.innerHTML = '';
-            // Скрываем контейнер событий
-            eventsContainer.style.display = 'none';
-            // Показываем кнопку авторизации
-            authButton.style.display = 'block';
-            // Скрываем кнопку выхода
-            logoutButton.style.display = 'none';
-        } catch (error) {
-            console.error('Ошибка при выходе:', error);
-        }
-    });
+    
+    
 
     // Инициализация слушателя событий
     window.electronAPI.onEventsUpdated((events) => {
