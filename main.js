@@ -46,6 +46,16 @@ function createWindow() {
   ipcMain.on('events-updated', (events) => {
     mainWindow.webContents.send('events-updated', events);
   });
+
+  // Обработчик для минимизации окна
+  ipcMain.on('minimize-window', () => {
+    mainWindow.minimize();
+  });
+
+  // Обработчик для закрытия окна
+  ipcMain.on('close-window', () => {
+    mainWindow.close();
+  });
 }
 
 

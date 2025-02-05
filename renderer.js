@@ -129,11 +129,12 @@ document.addEventListener('DOMContentLoaded', () => {
             const token = await window.electronAPI.getToken();
             if (token) {
                 authButton.style.display = 'none';
+                document.querySelector('.window-controls').style.display = 'flex';
                 
                 await loadEvents(token); // Загружаем события после успешной авторизации
             } else {
                 authButton.style.display = 'block';
-                
+                document.querySelector('.window-controls').style.display = 'none';
             }
         } catch (error) {
             console.error('Ошибка при проверке авторизации:', error);
@@ -185,14 +186,15 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('auth-button').style.display = 'block';
         // Скрываем кнопку выхода
         document.getElementById('logoutButton').style.display = 'none';
+        document.querySelector('.window-controls').style.display = 'none';
     });
 
     // Инициализация интерфейса
     function initializeUI() {
-        // Скрываем кнопку авторизации после успешного входа
         document.getElementById('auth-button').style.display = 'none';
-        // Показываем контейнеры событий
         document.querySelector('.events-container').style.display = 'block';
+        document.querySelector('.window-controls').style.display = 'flex';
+        console.log('UI initialized'); // Добавьте для отладки
     }
 
     // Пример вызова инициализации после авторизации
@@ -202,4 +204,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Проверяем авторизацию при загрузке страницы
     checkAuth();
+
+    // Обработчики для кнопок управления окном
+    const minimizeButton = document.getElementById('minimizeButton');
+    const closeButton = document.getElementById('closeButton');
+
+    minimizeButton.addEventListener('click', () => {
+        window.electronAPI.minimizeWindow();
+    });
+
+    closeButton.addEventListener('click', () => {
+        window.electronAPI.closeWindow();
+    });
 });

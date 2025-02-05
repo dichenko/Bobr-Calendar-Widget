@@ -13,4 +13,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
     },
     onClearEvents: (callback) => ipcRenderer.on('clear-events', callback),
     playNotification: () => ipcRenderer.invoke('show-notification'),
+    minimizeWindow: () => ipcRenderer.send('minimize-window'),
+    closeWindow: () => ipcRenderer.send('close-window'),
 });
