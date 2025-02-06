@@ -85,31 +85,23 @@ ipcMain.handle('get-events', async (event, token) => {
 
 // Добавим новый обработчик IPC
 ipcMain.handle('show-notification', () => {
-    console.log('Показываем уведомление'); // для отладки
-
-     // Формируем путь к звуковому файлу
-     //const soundPath = path.join(__dirname, 'assets/sounds', 'notification1.waw');
+    console.log('Показываем уведомление');
     
-     // Используем PowerShell для воспроизведения звука в Windows
-     const command = `powershell -c (New-Object Media.SoundPlayer '${soundPath}').PlaySync()`;
-     
-     exec(command, (error) => {
-         if (error) {
-             console.error('Ошибка воспроизведения звука:', error);
-         } else {
-             console.log('Звук успешно воспроизведен');
-         }
-     });
+    const command = `powershell -c (New-Object Media.SoundPlayer '${soundPath}').PlaySync()`;
+    
+    exec(command, (error) => {
+        if (error) {
+            console.error('Ошибка воспроизведения звука:', error);
+        } else {
+            console.log('Звук успешно воспроизведен');
+        }
+    });
 
     notifier.notify({
         title: 'Календарь',
-        message: 'До конца события осталось 10 минут',
+        message: 'Скоро окончание события',
         sound: true,
         wait: false
-    }, (err, response) => {
-        // Добавим логирование для отладки
-        if (err) console.error('Ошибка уведомления:', err);
-        console.log('Ответ уведомления:', response);
     });
 });
 
@@ -123,6 +115,17 @@ ipcMain.handle('logout', async () => {
         console.error('Ошибка при выходе:', error);
         throw error;
     }
+});
+
+ipcMain.handle('set-opacity', (_, value) => {
+    mainWindow.setOpacity(value);
+    store.set('windowOpacity', value);
+    return true;
+});
+
+ipcMain.handle('set-notification-times', (_, times) => {
+    store.set('notificationTimes', times);
+    return true;
 });
 
 app.whenReady().then(() => {

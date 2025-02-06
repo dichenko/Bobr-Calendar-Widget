@@ -230,27 +230,79 @@ button {
   top: 30px;
   right: 45px;
   background: rgba(0, 0, 0, 0.9);
-  border-radius: 4px;
-  padding: 4px 0;
-  min-width: 180px;
-  z-index: 1001; /* Увеличиваем z-index */
+  border-radius: 3px;
+  padding: 1px 0; /* Минимальный отступ */
+  min-width: 140px; /* Уменьшили ширину */
+  z-index: 1001;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
+/* Общие стили для пунктов меню */
 .dropdown-item {
-  padding: 8px 16px;
+  padding: 2px 8px;
   color: rgba(255, 255, 255, 0.8);
   cursor: pointer;
-  font-size: 14px;
+  font-size: 11px;
   transition: all 0.2s ease;
   position: relative;
-  z-index: 1002; /* Увеличиваем z-index для элементов меню */
+  z-index: 1002;
+  line-height: 1.2;
+}
+
+/* Специальные стили для кнопки выхода (с повышенной специфичностью) */
+.dropdown-menu .dropdown-item[data-action="logout"] {
+  background: rgba(220, 53, 69, 0.2) !important;
+  color: #ff4d4d !important;
+  margin: 2px 4px;
+  border-radius: 2px;
+  text-align: center;
+  padding: 3px 8px;
+}
+
+.dropdown-menu .dropdown-item[data-action="logout"]:hover {
+  background: rgba(220, 53, 69, 0.4) !important;
+  color: #fff !important;
+  padding-left: 8px !important; /* Фиксированный отступ при наведении */
+}
+
+/* Отменяем стандартное поведение при наведении для кнопки выхода */
+.dropdown-item[data-action="logout"]:hover {
+  background: rgba(220, 53, 69, 0.4) !important;
+  padding-left: 8px !important;
+}
+
+.dropdown-item[data-action="opacity"] {
+  padding-bottom: 1px;
+}
+
+.opacity-slider-container {
+  padding: 2px 0;
+  margin-top: 1px;
+}
+
+.opacity-value {
+  font-size: 9px;
+  margin-top: 1px;
+}
+
+.dropdown-item-title {
+  margin-bottom: 2px;
 }
 
 .dropdown-item:hover {
   background: rgba(255, 255, 255, 0.15);
   color: white;
-  padding-left: 20px;
+  padding-left: 10px;
+}
+
+/* Делаем слайдер компактнее */
+.opacity-slider {
+  height: 2px; /* Уменьшаем высоту слайдера */
+}
+
+.opacity-slider::-webkit-slider-thumb {
+  width: 8px; /* Уменьшаем размер ползунка */
+  height: 8px;
 }
 
 /* Добавляем класс для активного состояния меню */
@@ -265,6 +317,35 @@ button {
 
 .settings-wrapper:hover .dropdown-menu {
   display: block;
+}
+
+.notification-options {
+  padding: 4px 0;
+}
+
+.checkbox-group {
+  display: flex;
+  justify-content: space-around;
+  padding: 2px 20px;
+}
+
+.checkbox-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.checkbox-label {
+  font-size: 9px;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.checkbox-wrapper input[type="checkbox"] {
+  margin: 0;
+  cursor: pointer;
+  width: 12px;
+  height: 12px;
 }
 
 

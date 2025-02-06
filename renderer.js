@@ -5,10 +5,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const currentEventContainer = document.getElementById('current-event-container');
     const nextEventContainer = document.getElementById('next-event-container');
 
-    let soundPlayed = false;
+    let soundPlayed = new Set(); // Изменяем на Set для хранения всех сработавших уведомлений
     let isMenuOpen = false;
     let menuTimeout;
     const dropdownMenu = document.querySelector('.dropdown-menu');
+    let notificationTimes = new Set([10]); // По умолчанию включено уведомление за 10 минут
 
     // Функция для форматирования времени
     function formatTime(dateString) {
@@ -66,18 +67,21 @@ document.addEventListener('DOMContentLoaded', () => {
             const timeLeft = Math.floor((endTime - now) / (1000 * 60));
             
             // Добавим отладочную информацию
-            console.log('Текущее время:', now);
-            console.log('Время окончания:', endTime);
-            console.log('Осталось минут:', timeLeft);
+           // console.log('Текущее время:', now);
+            //console.log('Время окончания:', endTime);
+            //console.log('Осталось минут:', timeLeft);
             
-            if (timeLeft <= 10 && timeLeft > 9 && !soundPlayed) {
-                window.electronAPI.playNotification();
-                soundPlayed = true;
-            }
+            // Проверяем все установленные времена для уведомлений
+            notificationTimes.forEach(time => {
+                if (timeLeft === time && !soundPlayed.has(time)) {
+                    window.electronAPI.playNotification();
+                    soundPlayed.add(time);
+                }
+            });
             
-            // Сбрасываем флаг, когда событие закончилось
+            // Сбрасываем флаги, когда событие закончилось
             if (timeLeft <= 0) {
-                soundPlayed = false;
+                soundPlayed.clear();
             }
 
             currentEventContainer.innerHTML = `
@@ -165,7 +169,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Инициализация слушателя событий
     window.electronAPI.onEventsUpdated((events) => {
         updateEventsDisplay(events);
-        console.log('События обновлены в фоне:', new Date().toLocaleTimeString());
+        //console.log('События обновлены в фоне:', new Date().toLocaleTimeString());
     });
 
     // Обработчик фокуса окна
@@ -229,27 +233,41 @@ document.addEventListener('DOMContentLoaded', () => {
     const settingsButton = document.getElementById('settingsButton');
     const dropdownItems = document.querySelectorAll('.dropdown-item');
 
-    // Открытие/закрытие меню по клику
+    // Открытие меню по клику
     settingsButton.addEventListener('click', (e) => {
         e.stopPropagation();
-        isMenuOpen = !isMenuOpen;
-        document.querySelector('.dropdown-menu').style.display = isMenuOpen ? 'block' : 'none';
+        dropdownMenu.style.display = 'block';
     });
 
-    // Закрытие меню при клике вне его
-    document.addEventListener('click', (e) => {
-        if (!settingsButton.contains(e.target)) {
-            isMenuOpen = false;
-            document.querySelector('.dropdown-menu').style.display = 'none';
-        }
+    // Отслеживание мыши над меню
+    dropdownMenu.addEventListener('mouseenter', () => {
+        clearTimeout(menuTimeout);
+    });
+
+    // Отслеживание ухода мыши с меню
+    dropdownMenu.addEventListener('mouseleave', () => {
+        menuTimeout = setTimeout(() => {
+            dropdownMenu.style.display = 'none';
+        }, 2000); // 2 секунды
+    });
+
+    // Отслеживание мыши над кнопкой настроек
+    settingsButton.addEventListener('mouseenter', () => {
+        clearTimeout(menuTimeout);
+    });
+
+    // Отслеживание ухода мыши с кнопки настроек
+    settingsButton.addEventListener('mouseleave', () => {
+        menuTimeout = setTimeout(() => {
+            dropdownMenu.style.display = 'none';
+        }, 2000); // 2 секунды
     });
 
     // Обработка выбора пункта меню
     dropdownItems.forEach(item => {
         item.addEventListener('click', async (e) => {
             e.stopPropagation();
-            isMenuOpen = false;
-            document.querySelector('.dropdown-menu').style.display = 'none';
+            dropdownMenu.style.display = 'none';
             const action = e.target.dataset.action;
             
             // Добавляем логирование
@@ -274,14 +292,41 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    settingsButton.addEventListener('mouseenter', () => {
-        clearTimeout(menuTimeout);
-        dropdownMenu.style.display = 'block';
+    // Добавляем после существующих обработчиков
+    const opacitySlider = document.getElementById('opacitySlider');
+    const opacityValue = document.querySelector('.opacity-value');
+
+    opacitySlider.addEventListener('input', (e) => {
+        e.stopPropagation(); // Предотвращаем закрытие меню
+        const opacity = e.target.value;
+        opacityValue.textContent = `${opacity}%`;
+        window.electronAPI.setOpacity(opacity / 100);
     });
 
-    document.querySelector('.settings-wrapper').addEventListener('mouseleave', () => {
-        menuTimeout = setTimeout(() => {
-            dropdownMenu.style.display = 'none';
-        }, 3500); // Задержка 500мс
+    // Предотвращаем закрытие меню при взаимодействии со слайдером
+    opacitySlider.addEventListener('click', (e) => {
+        e.stopPropagation();
+    });
+
+    // Добавляем после инициализации DOM
+    const notificationCheckboxes = document.querySelectorAll('.notification-options input[type="checkbox"]');
+
+    notificationCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', (e) => {
+            e.stopPropagation(); // Предотвращаем закрытие меню
+            const minutes = parseInt(checkbox.value);
+            if (checkbox.checked) {
+                notificationTimes.add(minutes);
+            } else {
+                notificationTimes.delete(minutes);
+            }
+            // Сохраняем настройки
+            window.electronAPI.setNotificationTimes(Array.from(notificationTimes));
+        });
+
+        // Предотвращаем закрытие меню при клике на чекбокс
+        checkbox.addEventListener('click', (e) => {
+            e.stopPropagation();
+        });
     });
 });

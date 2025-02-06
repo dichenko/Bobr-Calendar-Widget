@@ -8,8 +8,32 @@
 <body>
   <div class="container">
     <div class="dropdown-menu">
-      <div class="dropdown-item" data-action="opacity">Прозрачность</div>
-      <div class="dropdown-item" data-action="notifications">Время оповещения</div>
+      <div class="dropdown-item" data-action="opacity">
+        <div class="dropdown-item-title">Прозрачность</div>
+        <div class="opacity-slider-container">
+          <input type="range" id="opacitySlider" min="30" max="100" value="100" class="opacity-slider">
+          <span class="opacity-value">100%</span>
+        </div>
+      </div>
+      <div class="dropdown-item" data-action="notifications">
+        <div class="dropdown-item-title">Время оповещения</div>
+        <div class="notification-options">
+          <div class="checkbox-group">
+            <div class="checkbox-wrapper">
+              <span class="checkbox-label">10</span>
+              <input type="checkbox" value="10" checked>
+            </div>
+            <div class="checkbox-wrapper">
+              <span class="checkbox-label">5</span>
+              <input type="checkbox" value="5">
+            </div>
+            <div class="checkbox-wrapper">
+              <span class="checkbox-label">1</span>
+              <input type="checkbox" value="1">
+            </div>
+          </div>
+        </div>
+      </div>
       <div class="dropdown-item" data-action="logout">Выйти из аккаунта</div>
     </div>
     

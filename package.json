@@ -1,15 +1,34 @@
 {
   "name": "calendar-widget",
   "version": "1.0.0",
+  "description": "Google Calendar Widget for Windows",
   "main": "main.js",
+  "author": "Your Name",
+  "license": "MIT",
   "scripts": {
-    "start": "chcp 65001 && electron .",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "electron .",
+    "build": "electron-builder",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder"
+  },
+  "build": {
+    "appId": "com.yourname.calendar-widget",
+    "productName": "Calendar Widget",
+    "directories": {
+      "output": "dist"
+    },
+    "win": {
+      "target": "nsis",
+      "icon": "assets/icon.ico"
+    },
+    "nsis": {
+      "oneClick": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Calendar Widget"
+    }
   },
   "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "description": "",
   "dependencies": {
     "@electron/remote": "^2.1.2",
     "dotenv": "^16.4.7",
