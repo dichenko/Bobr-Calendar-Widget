@@ -113,6 +113,18 @@ ipcMain.handle('show-notification', () => {
     });
 });
 
+// Добавьте после других обработчиков ipcMain
+ipcMain.handle('logout', async () => {
+    try {
+        auth.logout();
+        eventManager.stopEventChecking();
+        return true;
+    } catch (error) {
+        console.error('Ошибка при выходе:', error);
+        throw error;
+    }
+});
+
 app.whenReady().then(() => {
   // Добавляем протокол для доступа к локальным ресурсам
   protocol.handle('asset', (request) => {

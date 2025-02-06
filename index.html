@@ -6,8 +6,13 @@
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <div class="drag-region"></div>
   <div class="container">
+    <div class="dropdown-menu">
+      <div class="dropdown-item" data-action="opacity">Прозрачность</div>
+      <div class="dropdown-item" data-action="notifications">Время оповещения</div>
+      <div class="dropdown-item" data-action="logout">Выйти из аккаунта</div>
+    </div>
+    
     <button id="auth-button" class="gsi-material-button">
       <div class="gsi-material-button-content-wrapper">
         <div class="gsi-material-button-icon">
@@ -19,9 +24,11 @@
     
     <div class="events-container">
       <div class="window-controls">
-        <button class="window-button" id="settingsButton">
-          <img src="assets/icons/settings.svg" alt="Настройки">
-        </button>
+        <div class="settings-wrapper">
+          <button class="window-button" id="settingsButton">
+            <img src="assets/icons/settings.svg" alt="Настройки">
+          </button>
+        </div>
         <button class="window-button" id="minimizeButton">
           <img src="assets/icons/minimize.svg" alt="Свернуть">
         </button>
@@ -29,9 +36,7 @@
           <img src="assets/icons/close.svg" alt="Закрыть">
         </button>
       </div>
-      <div id="current-event-container">
-        
-      </div>
+      <div id="current-event-container"></div>
       <div id="next-event-container"></div>
     </div>
   </div>

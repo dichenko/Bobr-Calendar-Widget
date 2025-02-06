@@ -15,4 +15,5 @@ contextBridge.exposeInMainWorld('electronAPI', {
     playNotification: () => ipcRenderer.invoke('show-notification'),
     minimizeWindow: () => ipcRenderer.send('minimize-window'),
     closeWindow: () => ipcRenderer.send('close-window'),
+    logout: () => ipcRenderer.invoke('logout'),
 });

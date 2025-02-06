@@ -6,6 +6,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const nextEventContainer = document.getElementById('next-event-container');
 
     let soundPlayed = false;
+    let isMenuOpen = false;
+    let menuTimeout;
+    const dropdownMenu = document.querySelector('.dropdown-menu');
 
     // Функция для форматирования времени
     function formatTime(dateString) {
@@ -146,7 +149,10 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const tokens = await window.electronAPI.googleAuth();
             authButton.style.display = 'none';
-            logoutButton.style.display = 'block';
+            eventsContainer.style.display = 'block';
+            document.querySelector('.window-controls').style.display = 'flex';
+            document.querySelector('.settings-wrapper').style.display = 'block';
+            
             await loadEvents(tokens); // Загружаем события после авторизации
         } catch (error) {
             console.error('Ошибка при авторизации:', error);
@@ -194,7 +200,9 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('auth-button').style.display = 'none';
         document.querySelector('.events-container').style.display = 'block';
         document.querySelector('.window-controls').style.display = 'flex';
-        console.log('UI initialized'); // Добавьте для отладки
+        document.querySelector('.dropdown-menu').style.display = 'none'; // Сначала скрываем меню
+        document.querySelector('.settings-wrapper').style.display = 'block'; // Показываем обертку настроек
+        console.log('UI initialized');
     }
 
     // Пример вызова инициализации после авторизации
@@ -215,5 +223,65 @@ document.addEventListener('DOMContentLoaded', () => {
 
     closeButton.addEventListener('click', () => {
         window.electronAPI.closeWindow();
+    });
+
+    // Обработчик для кнопки настроек
+    const settingsButton = document.getElementById('settingsButton');
+    const dropdownItems = document.querySelectorAll('.dropdown-item');
+
+    // Открытие/закрытие меню по клику
+    settingsButton.addEventListener('click', (e) => {
+        e.stopPropagation();
+        isMenuOpen = !isMenuOpen;
+        document.querySelector('.dropdown-menu').style.display = isMenuOpen ? 'block' : 'none';
+    });
+
+    // Закрытие меню при клике вне его
+    document.addEventListener('click', (e) => {
+        if (!settingsButton.contains(e.target)) {
+            isMenuOpen = false;
+            document.querySelector('.dropdown-menu').style.display = 'none';
+        }
+    });
+
+    // Обработка выбора пункта меню
+    dropdownItems.forEach(item => {
+        item.addEventListener('click', async (e) => {
+            e.stopPropagation();
+            isMenuOpen = false;
+            document.querySelector('.dropdown-menu').style.display = 'none';
+            const action = e.target.dataset.action;
+            
+            // Добавляем логирование
+            console.log('Нажата кнопка:', action);
+            
+            if (action === 'logout') {
+                try {
+                    await window.electronAPI.logout();
+                    // Очищаем контейнеры событий
+                    currentEventContainer.innerHTML = '';
+                    nextEventContainer.innerHTML = '';
+                    // Скрываем контейнер событий
+                    eventsContainer.style.display = 'none';
+                    // Показываем кнопку авторизации
+                    authButton.style.display = 'block';
+                    // Скрываем элементы управления окном
+                    document.querySelector('.window-controls').style.display = 'none';
+                } catch (error) {
+                    console.error('Ошибка при выходе:', error);
+                }
+            }
+        });
+    });
+
+    settingsButton.addEventListener('mouseenter', () => {
+        clearTimeout(menuTimeout);
+        dropdownMenu.style.display = 'block';
+    });
+
+    document.querySelector('.settings-wrapper').addEventListener('mouseleave', () => {
+        menuTimeout = setTimeout(() => {
+            dropdownMenu.style.display = 'none';
+        }, 3500); // Задержка 500мс
     });
 });

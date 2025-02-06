@@ -7,6 +7,18 @@ body {
   background: transparent;
   -webkit-user-select: none;
   user-select: none;
+  -webkit-app-region: drag; /* Добавляем возможность перетаскивания */
+}
+
+/* Отключаем перетаскивание для всех интерактивных элементов */
+button,
+.dropdown-menu,
+.dropdown-item,
+.gsi-material-button,
+.window-controls,
+input[type="checkbox"],
+label {
+  -webkit-app-region: no-drag;
 }
 
 /* Контейнеры */
@@ -45,8 +57,9 @@ body {
   top: 5px;
   left: 5px;
   right: 5px;
-  bottom: 5px;
+  height: 20px; /* Ограничиваем высоту только верхней частью окна */
   -webkit-app-region: drag;
+  z-index: 900; /* Устанавливаем z-index ниже, чем у меню */
 }
 
 /* Кнопки */
@@ -167,12 +180,12 @@ button {
 
 /* Управление окном */
 .window-controls {
-  display: none;
+  display: flex;
   position: absolute;
   top: 4px;
   right: 4px;
   gap: 6px;
-  z-index: 100;
+  z-index: 1000;
   -webkit-app-region: no-drag;
 }
 
@@ -203,3 +216,55 @@ button {
   filter: invert(1); /* Белый цвет иконок */
   opacity: 0.9; /* Легкая прозрачность */
 }
+
+/* Стили для выпадающего меню */
+.settings-wrapper {
+  position: relative;
+  display: inline-block;
+  z-index: 1000;
+}
+
+.dropdown-menu {
+  display: none;
+  position: absolute;
+  top: 30px;
+  right: 45px;
+  background: rgba(0, 0, 0, 0.9);
+  border-radius: 4px;
+  padding: 4px 0;
+  min-width: 180px;
+  z-index: 1001; /* Увеличиваем z-index */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.dropdown-item {
+  padding: 8px 16px;
+  color: rgba(255, 255, 255, 0.8);
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s ease;
+  position: relative;
+  z-index: 1002; /* Увеличиваем z-index для элементов меню */
+}
+
+.dropdown-item:hover {
+  background: rgba(255, 255, 255, 0.15);
+  color: white;
+  padding-left: 20px;
+}
+
+/* Добавляем класс для активного состояния меню */
+.dropdown-menu.active {
+  display: block;
+}
+
+#settingsButton:focus + .dropdown-menu,
+.dropdown-menu:hover {
+  display: none;
+}
+
+.settings-wrapper:hover .dropdown-menu {
+  display: block;
+}
+
+
