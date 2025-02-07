@@ -64,7 +64,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (currentEvent) {
             const endTime = new Date(currentEvent.end.dateTime || currentEvent.end.date);
-            const timeLeft = Math.floor((endTime - now) / (1000 * 60));
+            const timeLeft = Math.floor((endTime - now + 1) / (1000 * 60));
             
             // Добавим отладочную информацию
            // console.log('Текущее время:', now);
@@ -90,6 +90,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div class="current-event-title">${truncateTitle(currentEvent.summary)}</div>
                     <div class="current-event-time-left">${String(Math.floor(timeLeft/60)).padStart(2,'0')}:${String(Math.floor(timeLeft%60)).padStart(2,'0')}</div>
                 </div>`;
+                
 
             if (nextEvent) {
                 nextEventContainer.innerHTML = `
@@ -200,7 +201,28 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Инициализация интерфейса
-    function initializeUI() {
+    async function initializeUI() {
+        try {
+            const settings = await window.electronAPI.getSettings();
+            
+            // Устанавливаем значение слайдера
+            const opacitySlider = document.getElementById('opacitySlider');
+            const opacityValue = document.querySelector('.opacity-value');
+            opacitySlider.value = settings.opacity;
+            opacityValue.textContent = `${settings.opacity}%`;
+            
+            // Устанавливаем чекбоксы уведомлений
+            const notificationCheckboxes = document.querySelectorAll('.notification-options input[type="checkbox"]');
+            notificationCheckboxes.forEach(checkbox => {
+                checkbox.checked = settings.notificationTimes.includes(parseInt(checkbox.value));
+            });
+            
+            // Обновляем набор времен уведомлений
+            notificationTimes = new Set(settings.notificationTimes);
+        } catch (error) {
+            console.error('Ошибка при загрузке настроек:', error);
+        }
+        
         document.getElementById('auth-button').style.display = 'none';
         document.querySelector('.events-container').style.display = 'block';
         document.querySelector('.window-controls').style.display = 'flex';

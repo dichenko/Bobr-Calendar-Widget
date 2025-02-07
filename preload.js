@@ -16,6 +16,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
     minimizeWindow: () => ipcRenderer.send('minimize-window'),
     closeWindow: () => ipcRenderer.send('close-window'),
     logout: () => ipcRenderer.invoke('logout'),
+    getSettings: () => ipcRenderer.invoke('get-settings'),
     setOpacity: (value) => ipcRenderer.invoke('set-opacity', value),
     setNotificationTimes: (times) => ipcRenderer.invoke('set-notification-times', times),
 });

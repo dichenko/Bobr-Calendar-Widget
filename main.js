@@ -31,7 +31,7 @@ function createWindow() {
 
   mainWindow.loadFile('index.html');
   // Открываем DevTools в отдельном окне
-  mainWindow.webContents.openDevTools({ mode: 'detach' });
+  //mainWindow.webContents.openDevTools({ mode: 'detach' });
 
 
 
@@ -117,15 +117,23 @@ ipcMain.handle('logout', async () => {
     }
 });
 
+// Добавить после других обработчиков ipcMain
+ipcMain.handle('get-settings', () => {
+  return {
+    opacity: store.get('windowOpacity', 100),
+    notificationTimes: store.get('notificationTimes', [10])
+  };
+});
+
 ipcMain.handle('set-opacity', (_, value) => {
-    mainWindow.setOpacity(value);
-    store.set('windowOpacity', value);
-    return true;
+  mainWindow.setOpacity(value);
+  store.set('windowOpacity', value);
+  return true;
 });
 
 ipcMain.handle('set-notification-times', (_, times) => {
-    store.set('notificationTimes', times);
-    return true;
+  store.set('notificationTimes', times);
+  return true;
 });
 
 app.whenReady().then(() => {
