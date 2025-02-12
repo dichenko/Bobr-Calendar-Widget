@@ -15,19 +15,31 @@
     "appId": "com.yourname.calendar-widget",
     "productName": "Calendar Widget",
     "directories": {
-      "output": "dist"
+      "output": "dist",
+      "buildResources": "assets"
     },
     "win": {
       "target": "nsis",
-      "icon": "assets/icon.ico"
+      "icon": "icons/icon.ico"
     },
     "nsis": {
       "oneClick": true,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
-      "shortcutName": "Calendar Widget"
+      "shortcutName": "Calendar Widget",
+      "installerIcon": "icons/icon.ico",
+      "uninstallerIcon": "icons/icon.ico"
     },
-    "icon": "assets/icon.ico"
+    "extraResources": [
+      {
+        "from": "assets/icons",
+        "to": "assets/icons"
+      },
+      {
+        "from": "assets/sounds",
+        "to": "assets/sounds"
+      }
+    ]
   },
   "keywords": [],
   "dependencies": {

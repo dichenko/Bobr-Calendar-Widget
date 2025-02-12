@@ -7,10 +7,19 @@ const Store = require('electron-store');
 //const { google } = require('googleapis');
 const notifier = require('node-notifier');
 const { exec } = require('child_process');
-const soundPath = path.join(__dirname, 'assets/sounds', 'notification1.wav');
+const fs = require('fs');
+const { URL } = require('url');
 
 // Создаем экземпляр Store
 const store = new Store();
+
+// Установка значений по умолчанию, если их нет
+if (!store.has('settings')) {
+  store.set('settings', {
+    opacity: 100,
+    notificationTimes: [10]
+  });
+}
 
 let mainWindow = null;
 
@@ -22,6 +31,7 @@ function createWindow() {
     transparent: true,
     alwaysOnTop: true,
     hasShadow: false,
+    icon: path.join(__dirname, 'assets', 'icons', 'icon.ico'),
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: true,
@@ -30,10 +40,8 @@ function createWindow() {
   });
 
   mainWindow.loadFile('index.html');
-  // Открываем DevTools в отдельном окне
-  //mainWindow.webContents.openDevTools({ mode: 'detach' });
-
-
+  // Включение DevTools при запуске
+  mainWindow.webContents.openDevTools({ mode: 'detach' });
 
   mainWindow.on('focus', () => {
     
@@ -83,26 +91,21 @@ ipcMain.handle('get-events', async (event, token) => {
   }
 });
 
-// Добавим новый обработчик IPC
-ipcMain.handle('show-notification', () => {
-    console.log('Показываем уведомление');
-    
-    const command = `powershell -c (New-Object Media.SoundPlayer '${soundPath}').PlaySync()`;
-    
-    exec(command, (error) => {
-        if (error) {
-            console.error('Ошибка воспроизведения звука:', error);
-        } else {
-            console.log('Звук успешно воспроизведен');
-        }
-    });
+// Правильный путь к звуковому файлу
+const soundPath = app.isPackaged 
+  ? path.join(process.resourcesPath, 'assets', 'sounds', 'notification1.wav')
+  : path.join(__dirname, 'assets', 'sounds', 'notification1.wav');
 
-    notifier.notify({
-        title: 'Календарь',
-        message: 'Скоро окончание события',
-        sound: true,
-        wait: false
+function playNotificationSound() {
+    const audio = new Audio(soundPath);
+    audio.play().catch(err => {
+        console.error('Ошибка воспроизведения звука:', err);
     });
+}
+
+// Обработчик IPC для воспроизведения звука
+ipcMain.handle('show-notification', () => {
+    playNotificationSound();
 });
 
 // Добавьте после других обработчиков ipcMain
@@ -138,9 +141,53 @@ ipcMain.handle('set-notification-times', (_, times) => {
 
 app.whenReady().then(() => {
   // Добавляем протокол для доступа к локальным ресурсам
-  protocol.handle('asset', (request) => {
-    const url = request.url.replace('asset://', '');
-    return net.fetch('file://' + path.join(__dirname, url));
+  protocol.handle('asset', async (request) => {
+    // Получаем полный путь из URL, включая 'icons/'
+    const filePath = request.url
+      .replace('asset://', '')  // Убираем протокол
+      .split('/')               // Разбиваем путь
+      .filter(Boolean)          // Убираем пустые части
+      .join(path.sep);          // Собираем путь с учетом ОС
+    
+    const basePath = app.isPackaged 
+      ? path.join(process.resourcesPath, 'assets')
+      : path.join(__dirname, 'assets');
+    
+    const fullPath = path.join(basePath, filePath);
+    
+    console.log('Asset request:', {
+      url: request.url,
+      filePath,
+      basePath,
+      fullPath,
+      exists: fs.existsSync(fullPath),
+      isPackaged: app.isPackaged
+    });
+
+    try {
+      const data = await fs.promises.readFile(fullPath);
+      const mimeType = {
+        '.svg': 'image/svg+xml',
+        '.png': 'image/png',
+        '.ico': 'image/x-icon'
+      }[path.extname(fullPath)] || 'text/plain';
+
+      return new Response(data, {
+        headers: { 'Content-Type': mimeType }
+      });
+    } catch (error) {
+      console.error('ASSET LOAD ERROR:', {
+        requested: request.url,
+        resolvedPath: fullPath,
+        error: error.message,
+        exists: fs.existsSync(fullPath),
+        parentDir: path.dirname(fullPath),
+        parentFiles: fs.existsSync(path.dirname(fullPath)) 
+          ? fs.readdirSync(path.dirname(fullPath)) 
+          : 'directory not found'
+      });
+      return new Response('Not Found', { status: 404 });
+    }
   });
   
   createWindow();

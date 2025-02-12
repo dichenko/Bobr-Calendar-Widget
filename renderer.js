@@ -203,22 +203,23 @@ document.addEventListener('DOMContentLoaded', () => {
     // Инициализация интерфейса
     async function initializeUI() {
         try {
-            const settings = await window.electronAPI.getSettings();
+            const settings = store.get('settings');
             
             // Устанавливаем значение слайдера
             const opacitySlider = document.getElementById('opacitySlider');
             const opacityValue = document.querySelector('.opacity-value');
-            opacitySlider.value = settings.opacity;
-            opacityValue.textContent = `${settings.opacity}%`;
+            opacitySlider.value = settings.opacity || 100;
+            opacityValue.textContent = `${settings.opacity || 100}%`;
             
             // Устанавливаем чекбоксы уведомлений
+            const savedTimes = settings.notificationTimes || [10];
             const notificationCheckboxes = document.querySelectorAll('.notification-options input[type="checkbox"]');
             notificationCheckboxes.forEach(checkbox => {
-                checkbox.checked = settings.notificationTimes.includes(parseInt(checkbox.value));
+                checkbox.checked = savedTimes.includes(parseInt(checkbox.value));
             });
             
             // Обновляем набор времен уведомлений
-            notificationTimes = new Set(settings.notificationTimes);
+            notificationTimes = new Set(savedTimes);
         } catch (error) {
             console.error('Ошибка при загрузке настроек:', error);
         }
