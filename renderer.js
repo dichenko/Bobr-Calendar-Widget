@@ -135,14 +135,21 @@ document.addEventListener('DOMContentLoaded', () => {
     async function checkAuth() {
         try {
             const token = await window.electronAPI.getToken();
+            const authContainer = document.querySelector('.auth-container');
+            const eventsContainer = document.querySelector('.events-container');
+            
             if (token) {
-                authButton.style.display = 'none';
+                authContainer.style.display = 'none';
+                eventsContainer.style.display = 'block';
                 document.querySelector('.window-controls').style.display = 'flex';
-                
-                await loadEvents(token); // Загружаем события после успешной авторизации
+                document.querySelector('.container').style.background = 'transparent';
+                document.querySelector('.container').style.padding = '5px';
             } else {
-                authButton.style.display = 'block';
+                authContainer.style.display = 'flex';
+                eventsContainer.style.display = 'none';
                 document.querySelector('.window-controls').style.display = 'none';
+                document.querySelector('.container').style.background = 'rgba(0, 0, 0, 0.5)';
+                document.querySelector('.container').style.padding = '20px';
             }
         } catch (error) {
             console.error('Ошибка при проверке авторизации:', error);
@@ -153,19 +160,42 @@ document.addEventListener('DOMContentLoaded', () => {
     authButton.addEventListener('click', async () => {
         try {
             const tokens = await window.electronAPI.googleAuth();
-            authButton.style.display = 'none';
-            eventsContainer.style.display = 'block';
-            document.querySelector('.window-controls').style.display = 'flex';
-            document.querySelector('.settings-wrapper').style.display = 'block';
+            const authContainer = document.querySelector('.auth-container');
+            const eventsContainer = document.querySelector('.events-container');
             
-            await loadEvents(tokens); // Загружаем события после авторизации
+            if (tokens) {
+                authContainer.style.display = 'none';
+                eventsContainer.style.display = 'block';
+                document.querySelector('.window-controls').style.display = 'flex';
+                document.querySelector('.container').style.background = 'transparent';
+                document.querySelector('.container').style.padding = '5px';
+                document.querySelector('.settings-wrapper').style.display = 'block';
+                
+                await loadEvents(tokens);
+            }
         } catch (error) {
             console.error('Ошибка при авторизации:', error);
+            // В случае ошибки показываем форму авторизации
+            authContainer.style.display = 'flex';
+            eventsContainer.style.display = 'none';
+            document.querySelector('.window-controls').style.display = 'none';
+            document.querySelector('.container').style.background = 'rgba(0, 0, 0, 0.5)';
+            document.querySelector('.container').style.padding = '20px';
         }
     });
 
-    
-    
+    // Добавим обработчик для выхода из аккаунта
+    window.electronAPI.onClearEvents(() => {
+        const authContainer = document.querySelector('.auth-container');
+        const eventsContainer = document.querySelector('.events-container');
+        
+        authContainer.style.display = 'flex';
+        eventsContainer.style.display = 'none';
+        document.querySelector('.window-controls').style.display = 'none';
+        document.querySelector('.container').style.background = 'rgba(0, 0, 0, 0.5)';
+        document.querySelector('.container').style.padding = '20px';
+        document.querySelector('.settings-wrapper').style.display = 'none';
+    });
 
     // Инициализация слушателя событий
     window.electronAPI.onEventsUpdated((events) => {
@@ -184,20 +214,6 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (error) {
             console.error('Ошибка при обновлении событий:', error);
         }
-    });
-
-    // Обработчик для разлогинивания
-    window.electronAPI.onClearEvents(() => {
-        // Очищаем контейнеры событий
-        document.getElementById('current-event-container').innerHTML = '';
-        document.getElementById('next-event-container').innerHTML = '';
-        // Скрываем контейнер событий
-        document.querySelector('.events-container').style.display = 'none';
-        // Показываем кнопку авторизации
-        document.getElementById('auth-button').style.display = 'block';
-        // Скрываем кнопку выхода
-        document.getElementById('logoutButton').style.display = 'none';
-        document.querySelector('.window-controls').style.display = 'none';
     });
 
     // Инициализация интерфейса
@@ -299,17 +315,22 @@ document.addEventListener('DOMContentLoaded', () => {
             if (action === 'logout') {
                 try {
                     await window.electronAPI.logout();
-                    // Очищаем контейнеры событий
-                    currentEventContainer.innerHTML = '';
-                    nextEventContainer.innerHTML = '';
-                    // Скрываем контейнер событий
+                    const authContainer = document.querySelector('.auth-container');
+                    const eventsContainer = document.querySelector('.events-container');
+                    
+                    // Показываем форму авторизации
+                    authContainer.style.display = 'flex';
                     eventsContainer.style.display = 'none';
-                    // Показываем кнопку авторизации
-                    authButton.style.display = 'block';
-                    // Скрываем элементы управления окном
                     document.querySelector('.window-controls').style.display = 'none';
+                    document.querySelector('.container').style.background = 'rgba(0, 0, 0, 0.5)';
+                    document.querySelector('.container').style.padding = '20px';
+                    document.querySelector('.settings-wrapper').style.display = 'none';
+                    
+                    // Очищаем контейнеры с событиями
+                    document.getElementById('current-event-container').innerHTML = '';
+                    document.getElementById('next-event-container').innerHTML = '';
                 } catch (error) {
-                    console.error('Ошибка при выходе:', error);
+                    console.error('Ошибка при выходе из аккаунта:', error);
                 }
             }
         });

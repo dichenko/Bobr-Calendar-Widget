@@ -41,7 +41,7 @@ function createWindow() {
 
   mainWindow.loadFile('index.html');
   // Включение DevTools при запуске
-  mainWindow.webContents.openDevTools({ mode: 'detach' });
+  //mainWindow.webContents.openDevTools({ mode: 'detach' });
 
   mainWindow.on('focus', () => {
     
