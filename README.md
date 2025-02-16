@@ -1,7 +1,7 @@
 # Bobr Calendar Widget
 
 <p align="center">
-  <img src="./assets/pic/bobr15x8.png" width="600" alt="Bobr Calendar Widget">
+  <img src="./assets/pic/bobr15x8.png" width=500" alt="Bobr Calendar Widget">
 </p>
 
 [Скачать](https://github.com/dichenko/Bobr-Calendar-Widget/releases)
