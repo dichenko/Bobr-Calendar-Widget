@@ -1,4 +1,9 @@
 # Bobr Calendar Widget
+
+<p align="center">
+  <img src="./assets/pic/bobr15x8.png" width="600" alt="Bobr Calendar Widget">
+</p>
+
 [Скачать](https://github.com/dichenko/Bobr-Calendar-Widget/releases)
 ## Описание
 Bobr Calendar Widget - это компактный виджет для Windows, который отображает текущие и предстоящие события из вашего Google Calendar прямо на рабочем столе. Приложение разработано для быстрого доступа к расписанию без необходимости открывать браузер.
