@@ -9,6 +9,7 @@ const notifier = require('node-notifier');
 const { exec } = require('child_process');
 const fs = require('fs');
 const { URL } = require('url');
+const { shell } = require('electron');
 
 // Создаем экземпляр Store
 const store = new Store();
@@ -70,9 +71,22 @@ function createWindow() {
 
 // Обработчик для авторизации
 ipcMain.handle('google-auth', async () => {
-  const tokens = await auth.authenticate();
-  eventManager.startEventChecking(tokens);
-  return tokens;
+  try {
+    const code = await auth.getAuthCode();
+    if (!code) return null;
+
+    const oauth2Client = auth.getOAuth2Client();
+    if (!oauth2Client) throw new Error('OAuth2 клиент не инициализирован');
+
+    // Получаем токен с помощью кода
+    const { tokens } = await oauth2Client.getToken(code);
+    // Сохраняем токен
+    store.set('googleToken', tokens);
+    return tokens;
+  } catch (error) {
+    console.error('Ошибка авторизации:', error);
+    throw error;
+  }
 });
 
 // Обработчик для получения токена

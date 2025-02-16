@@ -12,43 +12,85 @@ if (!process.env.CLIENT_ID || !process.env.CLIENT_SECRET) {
 
 const CLIENT_ID = process.env.CLIENT_ID;
 const CLIENT_SECRET = process.env.CLIENT_SECRET;
-const REDIRECT_URI = 'http://localhost:8080/oauth2callback';
+const REDIRECT_URI = 'http://localhost:0/oauth2callback';
 
 let authServer = null;
 let oauth2Client = null;
+let actualPort = null;
+let isAuthInProgress = false;
+
+// Функция для создания и получения oauth2Client
+function createOAuth2Client(port) {
+  return new google.auth.OAuth2(
+    CLIENT_ID,
+    CLIENT_SECRET,
+    `http://localhost:${port}/oauth2callback`
+  );
+}
 
 async function getAuthCode() {
+  if (isAuthInProgress) {
+    console.log('Процесс авторизации уже запущен');
+    return null;
+  }
+
   return new Promise((resolve, reject) => {
-    // Закрываем предыдущий сервер если был
-    if (authServer) {
-      authServer.close();
-    }
+    try {
+      isAuthInProgress = true;
 
-    authServer = require('http').createServer((req, res) => {
-      if (req.url.startsWith('/oauth2callback')) {
-        const url = new URL(req.url, 'http://localhost:8080');
-        const code = url.searchParams.get('code');
-        
-        if (code) {
-          resolve(code);
-          res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
-          res.end('<h1>Authorization Successful! You can close this window.</h1>');
-        } else {
-          reject(new Error('Authorization code not found'));
-          res.writeHead(400, { 'Content-Type': 'text/html' });
-          res.end('<h1>Authorization Failed</h1>');
-        }
-        
-        // Всегда закрываем сервер после обработки
-        authServer.close(() => {
-          authServer = null;
-        });
+      if (authServer) {
+        authServer.close();
+        authServer = null;
       }
-    });
 
-    authServer.listen(8080, () => {
-      console.log('Callback server started on port 8080');
-    });
+      authServer = require('http').createServer((req, res) => {
+        if (req.url.startsWith('/oauth2callback')) {
+          const url = new URL(req.url, `http://localhost:${actualPort}`);
+          const code = url.searchParams.get('code');
+          
+          if (code) {
+            res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+            res.end('<h1>Авторизация успешна! Вы можете закрыть это окно.</h1>');
+            cleanup();
+            resolve(code);
+          } else {
+            res.writeHead(400, { 'Content-Type': 'text/html' });
+            res.end('<h1>Ошибка авторизации</h1>');
+            cleanup();
+            reject(new Error('Код авторизации не найден'));
+          }
+        }
+      });
+
+      authServer.listen(0, 'localhost', () => {
+        actualPort = authServer.address().port;
+        console.log(`Сервер обратного вызова запущен на порту ${actualPort}`);
+        oauth2Client = createOAuth2Client(actualPort);
+        
+        const authUrl = oauth2Client.generateAuthUrl({
+          access_type: 'offline',
+          scope: ['https://www.googleapis.com/auth/calendar.readonly']
+        });
+
+        // Открываем URL для авторизации
+        require('electron').shell.openExternal(authUrl);
+      });
+
+    } catch (error) {
+      cleanup();
+      reject(error);
+    }
+  });
+}
+
+// Отдельная функция для получения URL авторизации
+function getAuthUrl() {
+  if (!oauth2Client) {
+    throw new Error('OAuth2 клиент не инициализирован');
+  }
+  return oauth2Client.generateAuthUrl({
+    access_type: 'offline',
+    scope: ['https://www.googleapis.com/auth/calendar.readonly']
   });
 }
 
@@ -98,8 +140,21 @@ function logout() {
   }
 }
 
+function cleanup() {
+  if (authServer) {
+    authServer.close();
+    authServer = null;
+  }
+  isAuthInProgress = false;
+  actualPort = null;
+}
+
 module.exports = {
+  getAuthCode,
+  getAuthUrl,
   authenticate,
   getToken,
-  logout
+  logout,
+  cleanup,
+  getOAuth2Client: () => oauth2Client
 };
